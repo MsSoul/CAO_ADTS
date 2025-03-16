@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'colors.dart';
 import 'package:logger/logger.dart';
-//import '../services/lend_transaction_api.dart';
-//import '../services/config.dart'; // Import Config
+import '../services/lend_transaction_api.dart';
+import '../services/config.dart'; // Import Config
 
 final Logger logger = Logger();
-/*final LendTransactionApi lendTransactionApi =
+final LendTransactionApi lendTransactionApi =
     LendTransactionApi(Config.baseUrl);
 
 Widget buildDialogTitle() {
@@ -17,7 +17,7 @@ Widget buildDialogTitle() {
     ),
   );
 }
-*/
+
 Widget buildBorrowDialogTitle() {
   return const Center(
     child: Text(
@@ -231,7 +231,7 @@ Widget buildActionButtons(
 
             try {
               logger.i("📤 Sending lending transaction...");
-              /*final response =
+              final response =
                   await lendTransactionApi.submitLendingTransaction(
                 empId: widget.empId,
                 itemId: widget.itemId,
@@ -240,7 +240,7 @@ Widget buildActionButtons(
                 currentDptId: widget.currentDptId,
               );
 
-              logger.i("🛠️ API Response: $response");*/
+              logger.i("🛠️ API Response: $response");
 
               if (!context.mounted) return;
 
@@ -263,7 +263,7 @@ Widget buildActionButtons(
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min, // Ensures the height is minimal
-        /*children: [
+        children: [
           SizedBox(
             width: 250, // Set a max width to keep it compact
             child: Center(
@@ -273,7 +273,7 @@ Widget buildActionButtons(
               ),
             ),
           ),
-        ],*/
+        ],
       ),
       actionsAlignment: MainAxisAlignment.center, // Centers the button
       actions: [

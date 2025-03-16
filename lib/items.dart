@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'borrow_items_screen.dart';
-// import 'lend_items_screen.dart';
+ import 'lend_items_screen.dart';
 // import 'return_item.dart';
 // import 'transfer_item_screen.dart';
 import 'design/colors.dart';
@@ -22,9 +22,9 @@ class ItemsPopup {
               _buildButton(context, "Borrow Item", () {
                 onSelect(BorrowItemsScreen(empId: empId, currentDptId: currentDptId));
               }),
-              // _buildButton(context, "Lend Item", () {
-              //   onSelect(LendingItemsScreen(empId: empId, currentDptId: currentDptId));
-              // }),
+               _buildButton(context, "Lend Item", () {
+                 onSelect(LendingItemsScreen(empId: empId, currentDptId: currentDptId));
+               }),
               // _buildButton(context, "Return Item", () {
               //   onSelect(ReturnItemScreen(empId: empId, currentDptId: currentDptId));
               // }),
