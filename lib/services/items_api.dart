@@ -24,27 +24,35 @@ class ItemsApi {
 
   // Fetch items assigned to an employee (OWNED ITEMS)
   Future<List<Map<String, dynamic>>> fetchItems(int empId) async {
-    log.i("🔄 Fetching items for empId: $empId");
-    final url = Uri.parse('$baseUrl/api/items/$empId');
+  log.i("🔄 Fetching items for empId: $empId");
+  final url = Uri.parse('$baseUrl/api/items/$empId');
 
-    try {
-      final response = await http.get(url);
-      log.i("📩 Status Code: ${response.statusCode}");
-      
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        if (responseData is Map<String, dynamic> && responseData.containsKey("items")) {
-          final items = List<Map<String, dynamic>>.from(responseData["items"]);
-          log.i("✅ Retrieved ${items.length} items.");
-          return items;
+  try {
+    final response = await http.get(url);
+    log.i("📩 Status Code: ${response.statusCode}");
+    
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+      log.i("🛠 Full Response: $responseData");
+
+      if (responseData is Map<String, dynamic> && responseData.containsKey("items")) {
+        final items = List<Map<String, dynamic>>.from(responseData["items"]);
+
+        // Print each item's keys to verify the correct structure
+        for (var item in items) {
+          log.i("🛠 Item Keys: ${item.keys.toList()}");
         }
+
+        return items;
       }
-      throw Exception('❌ Failed to load items: ${response.reasonPhrase}');
-    } catch (e) {
-      log.e("❌ Error fetching items: $e");
-      throw Exception('❌ Error fetching items. Please try again.');
     }
+    throw Exception('❌ Failed to load items: ${response.reasonPhrase}');
+  } catch (e) {
+    log.e("❌ Error fetching items: $e");
+    throw Exception('❌ Error fetching items. Please try again.');
   }
+}
+
 
 Future<List<Map<String, dynamic>>> fetchBorrowedItems(int empId) async {
   log.i("🔄 Fetching borrowed items for empId: $empId");
@@ -72,8 +80,8 @@ Future<List<Map<String, dynamic>>> fetchBorrowedItems(int empId) async {
           }
 
           return {
-            "name": item["ITEM_NAME"],
-            "description": item["DESCRIPTION"],
+            "ITEM_NAME": item["ITEM_NAME"],
+            "DESCRIPTION": item["DESCRIPTION"],
             "quantity": item["quantity"] ?? 0,
             "PAR_NO": item["PAR_NO"] ?? "N/A",
             "MR_NO": item["MR_NO"] ?? "N/A",

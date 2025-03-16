@@ -49,7 +49,7 @@ class DashboardTable extends StatelessWidget {
                   child:
                       Text('Remarks', style: _headerStyle))), // Remarks updated
         ],
-                rows: items.map((item) {
+        rows: items.map((item) {
           String remarks = item['remarks']?.toString() ?? '';
 
           if (selectedFilter == "Borrowed" && item['owner_name'] != null) {
@@ -71,8 +71,8 @@ class DashboardTable extends StatelessWidget {
           final currencyFormat = NumberFormat("#,##0.00", "en_US");
 
           return DataRow(cells: [
-            DataCell(Text(item['name']?.toString() ?? 'N/A')),
-            DataCell(Text(item['description']?.toString() ?? 'N/A')),
+            DataCell(Text(item['ITEM_NAME']?.toString() ?? 'N/A')), // Check Key Name
+            DataCell(Text(item['DESCRIPTION']?.toString() ?? 'N/A')),
             DataCell(Text(item['quantity']?.toString() ?? 'N/A')),
             DataCell(Text(item['ORIGINAL_QUANTITY']?.toString() ?? 'N/A')),
             DataCell(Text(item['PAR_NO']?.toString() ?? 'N/A')),
@@ -80,15 +80,13 @@ class DashboardTable extends StatelessWidget {
             DataCell(Text(item['PROP_NO']?.toString() ?? 'N/A')),
             DataCell(Text(item['SERIAL_NO']?.toString() ?? 'N/A')),
             DataCell(Text(item['MR_NO']?.toString() ?? 'N/A')),
-            DataCell(
-                Text('₱ ${currencyFormat.format(item['unit_value'] ?? 0.0)}')),
-            DataCell(
-                Text('₱ ${currencyFormat.format(item['total_value'] ?? 0.0)}')),
-            DataCell(
-                Text(remarks)), // Updated to display only owner name and formatted date
+            DataCell(Text(
+                '₱ ${currencyFormat.format(double.tryParse(item['unit_value'].toString()) ?? 0.0)}')),
+            DataCell(Text(
+                '₱ ${currencyFormat.format(double.tryParse(item['total_value'].toString()) ?? 0.0)}')),
+            DataCell(Text(remarks)),
           ]);
         }).toList(),
-
       ),
     );
   }
