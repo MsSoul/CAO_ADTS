@@ -4,7 +4,7 @@ import 'design/main_design.dart';
 import 'design/nav_bar.dart';
 import 'notification.dart';
 import 'dashboard.dart';
-//import 'items.dart';
+import 'items.dart';
 import 'main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -46,14 +46,14 @@ class HomeScreenState extends State<HomeScreen> {
           _selectedIndex = 1;
           _currentScreen = DashboardScreen(empId: empId, currentDptId: currentDptId);
           break;
-        /*case 'Items':
+        case 'Items':
           _selectedIndex = 2;
           ItemsPopup.show(context, empId, currentDptId, (Widget selectedScreen) {
             setState(() {
               _currentScreen = selectedScreen;
             });
           });
-          return;*/
+          return;
       }
     });
   }
