@@ -1,4 +1,3 @@
-//filename: borrow_transaction.dart
 import 'package:flutter/material.dart';
 import '../design/colors.dart';
 import 'services/borrow_transaction_api.dart';
@@ -29,7 +28,7 @@ class BorrowTransaction extends StatefulWidget {
     required this.owner,
     required this.ownerId,
     required this.borrower,
-    required this.distributedItemId
+    required this.distributedItemId,
   });
 
   @override
@@ -42,7 +41,7 @@ class BorrowTransactionState extends State<BorrowTransaction> {
   final Logger logger = Logger();
 
   String? quantityError;
-  String? borrowerName; // Store borrower name
+  String borrowerName = "Loading..."; // ✅ Default non-null value
   bool isLoading = true; // Track loading state
 
   @override
@@ -57,19 +56,13 @@ class BorrowTransactionState extends State<BorrowTransaction> {
     try {
       logger.i("Fetching borrower name for empId: ${widget.empId}");
       String? name = await borrowApi.fetchUserName(widget.empId);
-      if (name.isEmpty) {
-        logger.e("Error: Borrower name not found for empId ${widget.empId}");
-        setState(() {
-          borrowerName = "Error: Name not found";
-          isLoading = false;
-        });
-      } else {
-        logger.i("Borrower name fetched successfully: $name");
-        setState(() {
-          borrowerName = name;
-          isLoading = false;
-        });
-      }
+
+      setState(() {
+        borrowerName = (name.isEmpty) ? "Unknown" : name;
+        isLoading = false;
+      });
+
+      logger.i("Borrower name fetched: $borrowerName");
     } catch (e) {
       logger.e("Exception while fetching borrower name: $e");
       setState(() {
@@ -97,60 +90,60 @@ class BorrowTransactionState extends State<BorrowTransaction> {
     });
   }
 
-@override
-Widget build(BuildContext context) {
-  return LayoutBuilder(
-    builder: (context, constraints) => Dialog(
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: constraints.maxWidth * 0.05,
-        vertical: constraints.maxHeight * 0.05,
-      ),
-      backgroundColor: Colors.transparent,
-      child: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.9),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                buildBorrowDialogTitle(),
-                buildInfoBox('Item Name:', widget.itemName),
-                buildInfoBox('Description:', widget.description),
-                buildInfoBox(
-                  'Owner:',
-                  widget.owner
-                      .split(' ')
-                      .map((word) => word.isNotEmpty
-                          ? word[0].toUpperCase() + word.substring(1).toLowerCase()
-                          : '')
-                      .join(' '),
-                ),
-                isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : buildInfoBox('Borrower:', borrowerName ?? "Unknown"),
-                      buildTextField(
-                  'Quantity:',
-                  'Enter Quantity',
-                  controller: qtyController,
-                  onChanged: _validateQuantity,
-                  errorText: quantityError,
-                ),
-                buildBorrowActionButton(context, qtyController, widget),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => Dialog(
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: constraints.maxWidth * 0.05,
+          vertical: constraints.maxHeight * 0.05,
+        ),
+        backgroundColor: Colors.transparent,
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.9),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildBorrowDialogTitle(),
+                  buildInfoBox('Item Name:', widget.itemName),
+                  buildInfoBox('Description:', widget.description),
+                  buildInfoBox(
+                    'Owner:',
+                    widget.owner
+                        .split(' ')
+                        .map((word) => word.isNotEmpty
+                            ? word[0].toUpperCase() +
+                                word.substring(1).toLowerCase()
+                            : '')
+                        .join(' '),
+                  ),
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : buildInfoBox('Borrower:', borrowerName),
+                  buildTextField(
+                    'Quantity:',
+                    'Enter Quantity',
+                    controller: qtyController,
+                    onChanged: _validateQuantity,
+                    errorText: quantityError,
+                  ),
+                  buildBorrowActionButton(context, qtyController, widget),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget buildBorrowActionButton(
     BuildContext context,
@@ -184,7 +177,7 @@ Widget build(BuildContext context) {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(quantityError!),
+                    content: Text(quantityError ?? "Invalid quantity"),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -248,8 +241,8 @@ Widget build(BuildContext context) {
     required int distributedItemId,
     required BuildContext context,
   }) async {
-    BorrowTransactionApi borrowApi = BorrowTransactionApi();
     logger.i("Quantity to send: $quantity");
+
     bool success = await borrowApi.processBorrowTransaction(
       borrowerId: borrowerId,
       ownerId: ownerId,
@@ -258,15 +251,10 @@ Widget build(BuildContext context) {
       currentDptId: currentDptId,
       distributedItemId: distributedItemId,
     );
-    logger.i("📤 Sending borrow request: {"
-        " borrower_emp_id: ${widget.empId},"
-        " owner_emp_id: ${widget.ownerId},"
-        " distributedItemId : ${widget.distributedItemId},"
-        " itemId: ${widget.itemId},"
-        " quantity: ${qtyController.text},"
-        " currentDptId: ${widget.currentDptId}"
 
-        " }");
+    logger.i("📤 Sending borrow request: borrower_emp_id=${widget.empId}, "
+        "owner_emp_id=${widget.ownerId}, distributedItemId=${widget.distributedItemId}, "
+        "itemId=${widget.itemId}, quantity=$quantity, currentDptId=${widget.currentDptId}");
 
     return success;
   }

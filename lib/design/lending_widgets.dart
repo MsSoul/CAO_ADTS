@@ -99,7 +99,6 @@ Widget buildTextField(
     ],
   );
 }
-
 // Add button function
 Widget buildActionButtons(
     BuildContext context,
@@ -132,6 +131,7 @@ Widget buildActionButtons(
         child: ElevatedButton(
           onPressed: () async {
             logger.i("📌 Request button clicked!");
+            logger.i("🆔 Item ID being sent: ${widget.itemId}"); // Debugging item ID
 
             int? quantity = int.tryParse(qtyController.text);
 
@@ -244,59 +244,55 @@ Widget buildActionButtons(
 
               if (!context.mounted) return;
 
-              // ✅ Show Success Dialog (After Closing Confirmation)
+              if (response.containsKey("message") &&
+                  response["message"] == "Item not found") {
+                logger.e("❌ Backend Error: Item not found!");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Error: Item not found!'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              // ✅ Show Success Dialog
               await showDialog(
                 context: context,
                 barrierDismissible: false,
                 builder: (BuildContext successContext) {
-                  return Dialog(
-  backgroundColor: Colors.transparent,
-  child: IntrinsicWidth(
-    child: AlertDialog(
-      backgroundColor: Colors.white,
-      title: const Center(
-        child: Text(
-          '🎉',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 40), // Adjust emoji size
-        ),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min, // Ensures the height is minimal
-        children: [
-          SizedBox(
-            width: 250, // Set a max width to keep it compact
-            child: Center(
-              child: Text(
-                response['message'] ?? 'Request submitted successfully!',
-               textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ],
-      ),
-      actionsAlignment: MainAxisAlignment.center, // Centers the button
-      actions: [
-        ElevatedButton(
-          onPressed: () {
-            logger.i("🎉 Success dialog closed by user.");
-            Navigator.of(successContext).pop(); // Close Success Dialog
-            Navigator.of(context).pop(); // Close Main Dialog
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  ),
-);
-
+                  return AlertDialog(
+                    backgroundColor: Colors.white,
+                    title: const Center(
+                      child: Text(
+                        '🎉',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 40),
+                      ),
+                    ),
+                    content: Text(
+                      response['message'] ?? 'Request submitted successfully!',
+                      textAlign: TextAlign.center,
+                    ),
+                    actionsAlignment: MainAxisAlignment.center,
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () {
+                          logger.i("🎉 Success dialog closed by user.");
+                          Navigator.of(successContext).pop();
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
                 },
               );
             } catch (e) {

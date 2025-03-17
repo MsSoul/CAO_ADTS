@@ -51,8 +51,7 @@ class _BorrowItemsScreenState extends State<BorrowItemsScreen> {
       if (items.isEmpty) {
         log.w("⚠ No borrowable items found for Department ID: $currentDptId");
       } else {
-        log.i(
-            "🔍 Full API Response (${items.length} items): ${jsonEncode(items)}");
+        log.i("🔍 Full API Response (${items.length} items): ${jsonEncode(items)}");
       }
 
       setState(() {
@@ -72,8 +71,7 @@ class _BorrowItemsScreenState extends State<BorrowItemsScreen> {
         hasError = false;
       });
     } catch (e, stackTrace) {
-      log.e("❌ Error fetching borrowable items",
-          error: e, stackTrace: stackTrace);
+      log.e("❌ Error fetching borrowable items", error: e, stackTrace: stackTrace);
       setState(() {
         isLoading = false;
         hasError = true;
@@ -91,12 +89,22 @@ class _BorrowItemsScreenState extends State<BorrowItemsScreen> {
   }
 
   void _onBorrowPressed(Map<String, dynamic> item) async {
-    String borrowerName = await _allItemsApi.fetchUserName(empId);
-    int distributedItemId = item['distributedItemId'];
-    int itemId = item['itemId'];
+    // Fetch the borrower name and ensure it's not null
+    String? fetchedName = await _allItemsApi.fetchUserName(empId);
+    log.i("🔍 Borrower Name Fetched: $fetchedName");
 
-    log.i(
-        "🛠 Opening BorrowTransaction: DistributedItemId=$distributedItemId, ItemId=$itemId");
+    // Ensure a default value if it's null
+    String borrowerName = fetchedName;
+
+    int distributedItemId = item['distributedItemId'] ?? 0;
+    int itemId = item['itemId'] ?? 0;
+    String itemName = item['name'] ?? "Unnamed Item";
+    String description = item['description'] ?? "No description available";
+    int availableQuantity = item['quantity'] ?? 0;
+    int ownerId = item['accountable_emp'] ?? 0;
+    String ownerName = item['accountable_name'] ?? "Unknown Owner";
+
+    log.i("🛠 Opening BorrowTransaction: DistributedItemId=$distributedItemId, ItemId=$itemId");
 
     if (context.mounted) {
       showDialog(
@@ -106,11 +114,11 @@ class _BorrowItemsScreenState extends State<BorrowItemsScreen> {
           currentDptId: currentDptId,
           distributedItemId: distributedItemId,
           itemId: itemId,
-          itemName: item['name'],
-          description: item['description'],
-          availableQuantity: item['quantity'],
-          ownerId: item['accountable_emp'],
-          owner: item['accountable_name'] ?? 'Unknown',
+          itemName: itemName,
+          description: description,
+          availableQuantity: availableQuantity,
+          ownerId: ownerId,
+          owner: ownerName,
           borrower: borrowerName,
         ),
       );

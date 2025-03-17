@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'borrow_items_screen.dart';
  import 'lend_items_screen.dart';
 // import 'return_item.dart';
-// import 'transfer_item_screen.dart';
+import 'transfer_item_screen.dart';
 import 'design/colors.dart';
 
 typedef OnItemSelected = void Function(Widget selectedScreen);
@@ -28,9 +28,9 @@ class ItemsPopup {
               // _buildButton(context, "Return Item", () {
               //   onSelect(ReturnItemScreen(empId: empId, currentDptId: currentDptId));
               // }),
-              // _buildButton(context, "Transfer Item", () {
-              //   onSelect(TransferItemsScreen(empId: empId, currentDptId: currentDptId));
-              // }),
+               _buildButton(context, "Transfer Item", () {
+                 onSelect(TransferItemsScreen(empId: empId, currentDptId: currentDptId));
+               }),
               _buildButton(context, "Close", () {
                 Navigator.of(context).pop();
               }, isCloseButton: true),
