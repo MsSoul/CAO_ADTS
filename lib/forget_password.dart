@@ -168,8 +168,7 @@ class ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryColor,
                           foregroundColor: Colors.white,
-                          minimumSize:
-                              const Size(double.infinity, 45), 
+                          minimumSize: const Size(double.infinity, 45),
                         ),
                         child: const Text("Verify Identity"),
                       ),

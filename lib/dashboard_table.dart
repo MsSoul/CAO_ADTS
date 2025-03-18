@@ -61,17 +61,25 @@ class DashboardTable extends StatelessWidget {
                 DateTime parsedDate = DateTime.parse(item['createdAt']);
                 borrowedDate = DateFormat("yyyy-MM-dd").format(parsedDate);
               } catch (e) {
-                borrowedDate = "Invalid Date"; // Handle parsing errors
+                borrowedDate = "Invalid Date";
               }
             }
 
             remarks = "Owned By: $owner \nBorrowed Date: $borrowedDate";
+
+            // ✅ Add pending return request line if conditions are met
+            if (item['status'] == 2 &&
+                (item['remarks']?.toString().toLowerCase() == 'pending' ||
+                    item['remarks'] == 5)) {
+              remarks += "\nRequest to return status: Pending";
+            }
           }
 
           final currencyFormat = NumberFormat("#,##0.00", "en_US");
 
           return DataRow(cells: [
-            DataCell(Text(item['ITEM_NAME']?.toString() ?? 'N/A')), // Check Key Name
+            DataCell(
+                Text(item['ITEM_NAME']?.toString() ?? 'N/A')), // Check Key Name
             DataCell(Text(item['DESCRIPTION']?.toString() ?? 'N/A')),
             DataCell(Text(item['quantity']?.toString() ?? 'N/A')),
             DataCell(Text(item['ORIGINAL_QUANTITY']?.toString() ?? 'N/A')),

@@ -7,7 +7,7 @@ import 'home.dart';
 import 'services/user_api.dart';
 import 'services/notif_api.dart';
 import 'update_user.dart';
-import 'design/nav_bar.dart'; // Import for unreadNotifCount
+import 'design/nav_bar.dart';
 import 'services/config.dart';
 
 void main() async {
@@ -39,7 +39,8 @@ class LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool obscurePassword = true;
   final UserApi _userApi = UserApi();
-  final NotifApi _notifApi = NotifApi(baseUrl: Config.baseUrl); // ✅ Fixed NotifApi initialization
+  final NotifApi _notifApi =
+      NotifApi(baseUrl: Config.baseUrl); // ✅ Fixed NotifApi initialization
 
   Future<void> _handleLogin() async {
     debugPrint("Login Attempt with ID: ${_usernameController.text}");
@@ -95,13 +96,16 @@ class LoginScreenState extends State<LoginScreen> {
         debugPrint("Redirecting to UpdateUserScreen with Emp ID: $empId");
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => UpdateUserScreen(empId: empId)),
+          MaterialPageRoute(
+              builder: (context) => UpdateUserScreen(empId: empId)),
         );
       } else {
         debugPrint("Redirecting to HomeScreen...");
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen(empId: empId, currentDptId: currentDptId)), 
+          MaterialPageRoute(
+              builder: (context) =>
+                  HomeScreen(empId: empId, currentDptId: currentDptId)),
         );
       }
     }
@@ -110,8 +114,10 @@ class LoginScreenState extends State<LoginScreen> {
   // ✅ Fetch unread notifications count
   Future<void> _fetchUnreadNotifications(int empId) async {
     try {
-      List<Map<String, dynamic>> notifications = await _notifApi.fetchNotifications(empId);
-      int unreadCount = notifications.where((notif) => notif['is_read'] == false).length;
+      List<Map<String, dynamic>> notifications =
+          await _notifApi.fetchNotifications(empId);
+      int unreadCount =
+          notifications.where((notif) => notif['is_read'] == false).length;
 
       // ✅ Update the ValueNotifier
       unreadNotifCount.value = unreadCount;

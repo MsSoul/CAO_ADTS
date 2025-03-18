@@ -24,6 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _errorMessage = "";
   final ItemsApi _itemsApi = ItemsApi();
   int _currentPage = 0;
+  int _totalBorrowedCount = 0;
   final int _itemsPerPage = 10;
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = "All"; // Maintain selected filter
@@ -46,21 +47,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _searchController.dispose();
     super.dispose();
   }
-
-  Future<void> _loadItems() async {
+Future<void> _loadItems() async {
   log.i("Fetching items for emp_id: ${widget.empId}");
   try {
     final items = await _itemsApi.fetchItems(widget.empId);
-    final borrowedItems = await _itemsApi.fetchBorrowedItems(widget.empId);
 
-    log.i("📦 Items Response: $items");  // Log the items
-    log.i("📦 Borrowed Items Response: $borrowedItems");  // Log borrowed items
+    final borrowedResponse = await _itemsApi.fetchBorrowedItems(widget.empId);
+    final borrowedItems = borrowedResponse['borrowedItems'] as List<Map<String, dynamic>>;
+    final totalBorrowedCount = borrowedResponse['totalCount'] ?? borrowedItems.length;
+
+    log.i("📦 Items Response: $items");
+    log.i("📦 Borrowed Items Count: $totalBorrowedCount");
+    log.i("📦 Borrowed Items: $borrowedItems");
 
     if (mounted) {
       setState(() {
         _items = items;
         _borrowedItems = borrowedItems;
-        _applyFilter(); // Ensure filter is applied after loading data
+        _totalBorrowedCount = totalBorrowedCount; // If you want to store count
+        _applyFilter(); // Re-apply any filters after loading data
         _isLoading = false;
       });
     }
@@ -74,7 +79,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 }
-
 
 void _applyFilter() {
   String searchQuery = _searchController.text.toLowerCase();
