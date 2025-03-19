@@ -41,11 +41,6 @@ class ReturnTransactionState extends State<ReturnTransaction> {
   final Logger logger = Logger();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) => Dialog(
@@ -75,14 +70,13 @@ class ReturnTransactionState extends State<ReturnTransaction> {
                     widget.owner
                         .split(' ')
                         .map((word) => word.isNotEmpty
-                            ? word[0].toUpperCase() +
-                                word.substring(1).toLowerCase()
+                            ? word[0].toUpperCase() + word.substring(1).toLowerCase()
                             : '')
                         .join(' '),
                   ),
                   buildInfoBox('Borrower:', widget.borrower),
                   buildInfoBox('Quantity:', widget.quantity.toString()),
-                  buildReturnActionButton(context, widget),
+                  buildReturnActionButton(context),
                 ],
               ),
             ),
@@ -92,10 +86,7 @@ class ReturnTransactionState extends State<ReturnTransaction> {
     );
   }
 
-  Widget buildReturnActionButton(
-    BuildContext context,
-    ReturnTransaction widget,
-  ) {
+  Widget buildReturnActionButton(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -118,30 +109,18 @@ class ReturnTransactionState extends State<ReturnTransaction> {
               ownerName: widget.owner,
               itemId: widget.itemId,
               distributedItemId: widget.distributedItemId,
-              returnerName: widget.borrower, // Add the missing argument
+              returnerName: widget.borrower,
             );
 
             if (confirm) {
-              bool success = await processReturnTransaction(
-                borrowerId: widget.empId,
-                ownerId: widget.ownerId,
-                itemId: widget.itemId,
-                quantity: widget.quantity,
-                currentDptId: widget.currentDptId,
-                distributedItemId: widget.distributedItemId,
-                context: context,
-              );
+              bool success = await processReturnTransaction(context: context);
 
-              if (context.mounted) {
-                if (success) {
-                  logger.i("itemId: \${widget.itemId}");
-                  Navigator.pop(context); // Close return transaction dialog
-
-                  // Show success dialog
-                  await showSuccessDialog(context: context);
-                } else {
-                  logger.e("Failed to return item.");
-                }
+              if (context.mounted && success) {
+                logger.i("✅ Successfully returned itemId: ${widget.itemId}");
+                Navigator.pop(context); // Close dialog
+                await showSuccessDialog(context: context);
+              } else {
+                logger.e("❌ Failed to return itemId: ${widget.itemId}");
               }
             }
           },
@@ -155,32 +134,24 @@ class ReturnTransactionState extends State<ReturnTransaction> {
     );
   }
 
-  // Process return transaction API call
-  Future<bool> processReturnTransaction({
-    required int borrowerId,
-    required int ownerId,
-    required int itemId,
-    required int quantity,
-    required int currentDptId,
-    required int distributedItemId,
-    required BuildContext context,
-  }) async {
-    logger.i("Returning quantity: \$quantity");
+  Future<bool> processReturnTransaction({required BuildContext context}) async {
+    logger.i("Processing return for itemId: ${widget.itemId} with quantity: ${widget.quantity}");
 
     bool success = await returnApi.processReturnTransaction(
-      borrowerId: borrowerId,
-      ownerId: ownerId,
-      itemId: itemId,
-      quantity: quantity,
-      currentDptId: currentDptId,
-      distributedItemId: distributedItemId,
+      borrowerId: widget.empId,
+      ownerId: widget.ownerId,
+      itemId: widget.itemId,
+      quantity: widget.quantity,
+      currentDptId: widget.currentDptId,
+      distributedItemId: widget.distributedItemId,
     );
 
-    logger.i("🔍 ReturnTransaction Data: "
+    logger.i("🔎 ReturnTransaction Data: "
         "ItemId=${widget.itemId}, ItemName=${widget.itemName}, "
         "Description=${widget.description}, Quantity=${widget.quantity}, "
-        "Owner=${widget.owner}, Borrower=${widget.borrower}, "
-        "DistributedItemId=${widget.distributedItemId}, ");
+        "Owner=${widget.owner} (ID: ${widget.ownerId}), "
+        "Borrower=${widget.borrower} (ID: ${widget.empId}), "
+        "DistributedItemId=${widget.distributedItemId}");
 
     return success;
   }
