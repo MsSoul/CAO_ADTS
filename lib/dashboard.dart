@@ -10,7 +10,8 @@ class DashboardScreen extends StatefulWidget {
   final int empId;
   final int currentDptId;
 
-  const DashboardScreen({super.key, required this.empId, required this.currentDptId});
+  const DashboardScreen(
+      {super.key, required this.empId, required this.currentDptId});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -47,73 +48,81 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _searchController.dispose();
     super.dispose();
   }
-Future<void> _loadItems() async {
-  log.i("Fetching items for emp_id: ${widget.empId}");
-  try {
-    final items = await _itemsApi.fetchItems(widget.empId);
 
-    final borrowedResponse = await _itemsApi.fetchBorrowedItems(widget.empId);
-    final borrowedItems = borrowedResponse['borrowedItems'] as List<Map<String, dynamic>>;
-    final totalBorrowedCount = borrowedResponse['totalCount'] ?? borrowedItems.length;
+  Future<void> _loadItems() async {
+    log.i("Fetching items for emp_id: ${widget.empId}");
+    try {
+      final items = await _itemsApi.fetchItems(widget.empId);
 
-    log.i("📦 Items Response: $items");
-    log.i("📦 Borrowed Items Count: $totalBorrowedCount");
-    log.i("📦 Borrowed Items: $borrowedItems");
+      final borrowedResponse = await _itemsApi.fetchBorrowedItems(widget.empId);
+      final borrowedItems =
+          borrowedResponse['borrowedItems'] as List<Map<String, dynamic>>;
+      final totalBorrowedCount =
+          borrowedResponse['totalCount'] ?? borrowedItems.length;
 
-    if (mounted) {
-      setState(() {
-        _items = items;
-        _borrowedItems = borrowedItems;
-        _totalBorrowedCount = totalBorrowedCount; // If you want to store count
-        _applyFilter(); // Re-apply any filters after loading data
-        _isLoading = false;
-      });
+      log.i("📦 Items Response: $items");
+      log.i("📦 Borrowed Items Count: $totalBorrowedCount");
+      log.i("📦 Borrowed Items: $borrowedItems");
+
+      if (mounted) {
+        setState(() {
+          _items = items;
+          _borrowedItems = borrowedItems;
+          _totalBorrowedCount =
+              totalBorrowedCount; // If you want to store count
+          _applyFilter(); // Re-apply any filters after loading data
+          _isLoading = false;
+        });
+      }
+    } catch (e, stacktrace) {
+      log.e("❌ Error loading items: $e", error: e, stackTrace: stacktrace);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Error fetching items. Please check your connection.";
+        });
+      }
     }
-  } catch (e, stacktrace) {
-    log.e("❌ Error loading items: $e", error: e, stackTrace: stacktrace);
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = "Error fetching items. Please check your connection.";
-      });
+  }
+
+  void _applyFilter() {
+    log.i("Applying filter: $_selectedFilter");
+    log.i("Search Query: ${_searchController.text}");
+    log.i(
+        "Total Items Before Filter: ${_items.length + _borrowedItems.length}");
+
+    String searchQuery = _searchController.text.toLowerCase();
+    List<Map<String, dynamic>> filtered = [];
+
+    if (_selectedFilter == "All") {
+      filtered = [..._items, ..._borrowedItems];
+    } else if (_selectedFilter == "Owned") {
+      filtered = _items;
+    } else if (_selectedFilter == "Borrowed") {
+      filtered = _borrowedItems;
     }
+
+    if (searchQuery.isNotEmpty) {
+      filtered = filtered.where((item) {
+        String itemName = item['ITEM_NAME']?.toString().toLowerCase() ?? '';
+        String itemCode = item['code']?.toString().toLowerCase() ?? '';
+        return itemName.contains(searchQuery) || itemCode.contains(searchQuery);
+      }).toList();
+    }
+
+    log.i("Filtered Items Count: ${filtered.length}");
+
+    setState(() {
+      _filteredItems = filtered;
+      _currentPage = 0;
+    });
   }
-}
-
-void _applyFilter() {
-  String searchQuery = _searchController.text.toLowerCase();
-
-  List<Map<String, dynamic>> filtered = [];
-  
-  if (_selectedFilter == "All") {
-    filtered = [..._items, ..._borrowedItems];
-  } else if (_selectedFilter == "Owned") {
-    filtered = _items;
-  } else if (_selectedFilter == "Borrowed") {
-    filtered = _borrowedItems;
-  }
-
-  // Apply search filter
-  if (searchQuery.isNotEmpty) {
-    filtered = filtered.where((item) {
-      String itemName = item['name']?.toString().toLowerCase() ?? '';
-      String itemCode = item['code']?.toString().toLowerCase() ?? ''; // Adjust based on actual data structure
-
-      return itemName.contains(searchQuery) || itemCode.contains(searchQuery);
-    }).toList();
-  }
-
-  setState(() {
-    _filteredItems = filtered;
-    _currentPage = 0;
-  });
-}
-
 
   List<Map<String, dynamic>> get _paginatedItems {
     final startIndex = _currentPage * _itemsPerPage;
     final endIndex = startIndex + _itemsPerPage;
-    return _filteredItems.sublist(startIndex, endIndex.clamp(0, _filteredItems.length));
+    return _filteredItems.sublist(
+        startIndex, endIndex.clamp(0, _filteredItems.length));
   }
 
   void _nextPage() {
@@ -139,7 +148,10 @@ void _applyFilter() {
           children: [
             const Text(
               'Dashboard',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppColors.primaryColor),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: AppColors.primaryColor),
             ),
             SizedBox(
               height: 40,
@@ -147,17 +159,21 @@ void _applyFilter() {
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'Search Items',
-                  prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.primaryColor),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                  prefixIcon: const Icon(Icons.search,
+                      size: 18, color: AppColors.primaryColor),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                   filled: true,
                   fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.primaryColor, width: 1),
+                    borderSide: const BorderSide(
+                        color: AppColors.primaryColor, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: AppColors.primaryColor, width: 2),
+                    borderSide: const BorderSide(
+                        color: AppColors.primaryColor, width: 2),
                   ),
                 ),
                 style: const TextStyle(fontSize: 14),
@@ -177,7 +193,10 @@ void _applyFilter() {
                 ? Center(
                     child: Text(
                       '⚠ $_errorMessage',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryColor),
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryColor),
                     ),
                   )
                 : Column(
@@ -186,21 +205,27 @@ void _applyFilter() {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
                             child: DropdownButtonHideUnderline(
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: AppColors.primaryColor, width: 1),
+                                  border: Border.all(
+                                      color: AppColors.primaryColor, width: 1),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
                                 child: DropdownButton<String>(
                                   value: _selectedFilter,
-                                  items: ["All", "Owned", "Borrowed"].map((filter) {
+                                  items: ["All", "Owned", "Borrowed"]
+                                      .map((filter) {
                                     return DropdownMenuItem(
                                       value: filter,
-                                      child: Text(filter, style: const TextStyle(color: Colors.black)),
+                                      child: Text(filter,
+                                          style: const TextStyle(
+                                              color: Colors.black)),
                                     );
                                   }).toList(),
                                   onChanged: (value) {
@@ -216,11 +241,17 @@ void _applyFilter() {
                           ),
                           Row(
                             children: [
-                              IconButton(icon: const Icon(Icons.arrow_back), onPressed: _currentPage > 0 ? _previousPage : null),
+                              IconButton(
+                                  icon: const Icon(Icons.arrow_back),
+                                  onPressed:
+                                      _currentPage > 0 ? _previousPage : null),
                               Text("Page ${_currentPage + 1} of $totalPages"),
                               IconButton(
                                 icon: const Icon(Icons.arrow_forward),
-                                onPressed: (_currentPage + 1) * _itemsPerPage < _filteredItems.length ? _nextPage : null,
+                                onPressed: (_currentPage + 1) * _itemsPerPage <
+                                        _filteredItems.length
+                                    ? _nextPage
+                                    : null,
                               ),
                             ],
                           ),
@@ -232,7 +263,9 @@ void _applyFilter() {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(10.0),
-                              child: DashboardTable(items: _paginatedItems, selectedFilter: _selectedFilter),
+                              child: DashboardTable(
+                                  items: _paginatedItems,
+                                  selectedFilter: _selectedFilter),
                             ),
                           ],
                         ),

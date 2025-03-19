@@ -101,7 +101,7 @@ Future<Map<String, dynamic>> fetchBorrowedItems(int empId) async {
             }
           }
 
-          bool hasReturnRequest = (item["status"] == 2 && item["remarks"] == 5);
+          bool hasReturnRequest = item["already_requested_return"] == true;
 
           String remarksText = "";
           if (item["OWNER_NAME"] != null) {

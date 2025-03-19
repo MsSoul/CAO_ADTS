@@ -7,6 +7,7 @@ class ItemsTransactionTable extends StatefulWidget {
   final String selectedFilter;
   final void Function(Map<String, dynamic>) onActionPressed;
   final String actionLabel;
+  final bool Function(Map<String, dynamic>)? isActionDisabled;
 
   const ItemsTransactionTable({
     super.key,
@@ -14,6 +15,7 @@ class ItemsTransactionTable extends StatefulWidget {
     required this.selectedFilter,
     required this.onActionPressed,
     required this.actionLabel,
+    this.isActionDisabled,
   });
 
   @override
@@ -51,13 +53,19 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.primaryColor),
-                  onPressed: currentPage > 0 ? () => _changePage(currentPage - 1) : null,
+                  icon: const Icon(Icons.arrow_back,
+                      color: AppColors.primaryColor),
+                  onPressed: currentPage > 0
+                      ? () => _changePage(currentPage - 1)
+                      : null,
                 ),
                 Text("Page ${currentPage + 1} of $totalPages"),
                 IconButton(
-                  icon: const Icon(Icons.arrow_forward, color: AppColors.primaryColor),
-                  onPressed: currentPage < totalPages - 1 ? () => _changePage(currentPage + 1) : null,
+                  icon: const Icon(Icons.arrow_forward,
+                      color: AppColors.primaryColor),
+                  onPressed: currentPage < totalPages - 1
+                      ? () => _changePage(currentPage + 1)
+                      : null,
                 ),
               ],
             ),
@@ -67,63 +75,107 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                 scrollDirection: Axis.horizontal,
                 child: SingleChildScrollView(
                   child: DataTable(
-                    border: TableBorder.all(color: AppColors.primaryColor, width: 1.5),
+                    border: TableBorder.all(
+                        color: AppColors.primaryColor, width: 1.5),
                     dataRowMinHeight: 40,
                     dataRowMaxHeight: 40,
-                    headingRowColor:
-                        WidgetStateColor.resolveWith((states) => AppColors.primaryColor),
+                    headingRowColor: WidgetStateColor.resolveWith(
+                        (states) => AppColors.primaryColor),
                     columns: const [
-                      DataColumn(label: Center(child: Text('Action', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Name', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Description', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Available Quantity', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Original Quantity', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('PAR No', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('PIS No.', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Prop No.', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Serial No.', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('MR No.', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Unit Value', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Total Value', style: _headerStyle))),
-                      DataColumn(label: Center(child: Text('Remarks', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Action', style: _headerStyle))),
+                      DataColumn(
+                          label:
+                              Center(child: Text('Name', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Description', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Available Quantity',
+                                  style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Original Quantity',
+                                  style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('PAR No', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('PIS No.', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Prop No.', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Serial No.', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('MR No.', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Unit Value', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Total Value', style: _headerStyle))),
+                      DataColumn(
+                          label: Center(
+                              child: Text('Remarks', style: _headerStyle))),
                     ],
                     rows: paginatedItems.map((item) {
                       String remarks = item['remarks']?.toString() ?? '';
 
-                      if (widget.selectedFilter == "Borrowed" && item['owner_name'] != null) {
+                      if (widget.selectedFilter == "Borrowed" &&
+                          item['owner_name'] != null) {
                         String owner = item['owner_name'].toString();
                         String borrowedDate = "N/A";
 
                         if (item['createdAt'] != null) {
                           try {
-                            DateTime parsedDate = DateTime.parse(item['createdAt']);
-                            borrowedDate = DateFormat("yyyy-MM-dd").format(parsedDate);
+                            DateTime parsedDate =
+                                DateTime.parse(item['createdAt']);
+                            borrowedDate =
+                                DateFormat("yyyy-MM-dd").format(parsedDate);
                           } catch (e) {
                             borrowedDate = "Invalid Date";
                           }
                         }
 
-                        remarks = "Owned By: $owner \nBorrowed Date: $borrowedDate";
+                        remarks =
+                            "Owned By: $owner \nBorrowed Date: $borrowedDate";
                       }
 
                       final currencyFormat = NumberFormat("#,##0.00", "en_US");
+
+                      final isDisabled = widget.isActionDisabled != null &&
+                          widget.isActionDisabled!(item);
 
                       return DataRow(cells: [
                         DataCell(
                           SizedBox(
                             height: 35,
                             child: ElevatedButton(
-                              onPressed: () => widget.onActionPressed(item),
+                              onPressed: isDisabled
+                                  ? null
+                                  : () => widget.onActionPressed(item),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryColor,
+                                backgroundColor: isDisabled
+                                    ? Colors.grey
+                                    : AppColors.primaryColor,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
                               ),
                               child: Text(
-                                widget.actionLabel,
+                                isDisabled
+                                    ? "Requested"
+                                    : widget
+                                        .actionLabel, // 👉 This line modified
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -133,9 +185,11 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                           ),
                         ),
                         DataCell(Text(item['ITEM_NAME']?.toString() ?? 'N/A')),
-                        DataCell(Text(item['DESCRIPTION']?.toString() ?? 'N/A')),
+                        DataCell(
+                            Text(item['DESCRIPTION']?.toString() ?? 'N/A')),
                         DataCell(Text(item['quantity']?.toString() ?? 'N/A')),
-                        DataCell(Text(item['ORIGINAL_QUANTITY']?.toString() ?? 'N/A')),
+                        DataCell(Text(
+                            item['ORIGINAL_QUANTITY']?.toString() ?? 'N/A')),
                         DataCell(Text(item['PAR_NO']?.toString() ?? 'N/A')),
                         DataCell(Text(item['PIS_NO']?.toString() ?? 'N/A')),
                         DataCell(Text(item['PROP_NO']?.toString() ?? 'N/A')),

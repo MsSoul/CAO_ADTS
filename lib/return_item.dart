@@ -11,7 +11,8 @@ class ReturnItemsScreen extends StatefulWidget {
   final int empId;
   final int currentDptId;
 
-  const ReturnItemsScreen({super.key, required this.empId, required this.currentDptId});
+  const ReturnItemsScreen(
+      {super.key, required this.empId, required this.currentDptId});
 
   @override
   State<ReturnItemsScreen> createState() => _ReturnItemsScreenState();
@@ -36,57 +37,62 @@ class _ReturnItemsScreenState extends State<ReturnItemsScreen> {
     log.i("💡 Employee ID: $empId");
     _loadBorrowedItems();
   }
-Future<void> _loadBorrowedItems() async {
-  try {
-    final response = await ItemsApi().fetchBorrowedItems(empId);
-    final items = response['borrowedItems'] as List<Map<String, dynamic>>;
-    final totalCount = response['totalCount'] ?? items.length;
 
-    log.i("🔍 Raw API Response: ${jsonEncode(response)}");
-    log.i("📊 Total Borrowed Items Count: $totalCount");
+  Future<void> _loadBorrowedItems() async {
+    try {
+      final response = await ItemsApi().fetchBorrowedItems(empId);
+      final items = response['borrowedItems'] as List<Map<String, dynamic>>;
+      final totalCount = response['totalCount'] ?? items.length;
 
-    if (items.isEmpty) {
-      log.w("⚠ No borrowed items found for Employee ID: $empId");
+      log.i("🔍 Raw API Response: ${jsonEncode(response)}");
+      log.i("📊 Total Borrowed Items Count: $totalCount");
+
+      setState(() {
+        borrowedItems = items.map((item) {
+          int distributedItemId =
+              item['distributed_item_id'] ?? item['DISTRIBUTED_ITEM_ID'] ?? 0;
+          int itemId = item['item_id'] ?? item['ITEM_ID'] ?? 0;
+          bool hasReturnRequest = (item['pending_return_request'] == true) ||
+              (item['return_request_status']?.toString().toLowerCase() ==
+                  'pending') ||
+              (item['hasReturnRequest'] == true);
+
+          return {
+            'distributed_item_id': distributedItemId,
+            'ITEM_ID': itemId,
+            'hasReturnRequest': hasReturnRequest,
+            ...item,
+          };
+        }).toList();
+
+        filteredItems = List.from(borrowedItems);
+        isLoading = false;
+        hasError = false;
+      });
+
+      log.i("✅ Borrowed items successfully loaded.");
+    } catch (e, stackTrace) {
+      log.e("❌ Error fetching borrowed items",
+          error: e, stackTrace: stackTrace);
+      setState(() {
+        isLoading = false;
+        hasError = true;
+      });
     }
-
-    setState(() {
-      borrowedItems = items.map((item) {
-        int distributedItemId = item['distributed_item_id'] ?? item['DISTRIBUTED_ITEM_ID'] ?? 0;
-        int itemId = item['item_id'] ?? item['ITEM_ID'] ?? 0;
-
-        log.i("📦 Processed Item - ITEM_ID: $itemId, DistributedItemId: $distributedItemId, Name: ${item['ITEM_NAME'] ?? 'N/A'}");
-
-        return {
-          'distributed_item_id': distributedItemId,
-          'ITEM_ID': itemId,
-          ...item
-        };
-      }).toList();
-
-      filteredItems = List.from(borrowedItems);
-      isLoading = false;
-      hasError = false;
-    });
-
-    log.i("✅ Borrowed items successfully loaded.");
-  } catch (e, stackTrace) {
-    log.e("❌ Error fetching borrowed items", error: e, stackTrace: stackTrace);
-    setState(() {
-      isLoading = false;
-      hasError = true;
-    });
   }
-}
 
   void _searchItems(String query) {
     setState(() {
       filteredItems = borrowedItems
-          .where((item) => item['ITEM_NAME'].toLowerCase().contains(query.toLowerCase()))
+          .where((item) =>
+              item['ITEM_NAME'].toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
 
   Future<void> _onReturnPressed(Map<String, dynamic> item) async {
+    if (item['hasReturnRequest'] == true) return;
+
     String? fetchedName = await borrowTransactionApi.fetchUserName(empId);
     log.i("🔍 Borrower Name Fetched: $fetchedName");
 
@@ -101,8 +107,8 @@ Future<void> _loadBorrowedItems() async {
         : "Unknown Owner";
     int ownerId = (item['owner_emp_id'] as int?) ?? 0;
 
-
-    log.i("🛠 Opening ReturnTransaction: ITEM_ID=$itemId, DistributedItemId=$distributedItemId");
+    log.i(
+        "🛠 Opening ReturnTransaction: ITEM_ID=$itemId, DistributedItemId=$distributedItemId");
 
     if (context.mounted) {
       showDialog(
@@ -119,7 +125,6 @@ Future<void> _loadBorrowedItems() async {
           borrower: borrowerName,
           borrowedQuantity: borrowedQuantity,
           quantity: borrowedQuantity,
-
         ),
       );
     }
@@ -155,7 +160,6 @@ Future<void> _loadBorrowedItems() async {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Search Box
                       SizedBox(
                         height: 45,
                         child: TextField(
@@ -167,30 +171,35 @@ Future<void> _loadBorrowedItems() async {
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
                             ),
-                            prefixIcon: const Icon(Icons.search, color: AppColors.primaryColor),
+                            prefixIcon: const Icon(Icons.search,
+                                color: AppColors.primaryColor),
                             filled: true,
                             fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 12),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: AppColors.primaryColor, width: 2),
+                              borderSide: const BorderSide(
+                                  color: AppColors.primaryColor, width: 2),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: AppColors.primaryColor, width: 3),
+                              borderSide: const BorderSide(
+                                  color: AppColors.primaryColor, width: 3),
                             ),
                           ),
                           onChanged: _searchItems,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      // Items Table
                       Expanded(
                         child: ItemsTransactionTable(
                           items: filteredItems,
                           selectedFilter: "Returned",
                           actionLabel: "Return",
                           onActionPressed: _onReturnPressed,
+                          isActionDisabled: (item) =>
+                              item["hasReturnRequest"] == true,
                         ),
                       ),
                     ],
