@@ -265,11 +265,7 @@ Widget buildActionButtons(
                   return AlertDialog(
                     backgroundColor: Colors.white,
                     title: const Center(
-                      child: Text(
-                        '🎉',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 40),
-                      ),
+                      child: Icon(Icons.check_circle, color: Colors.green, size: 48),
                     ),
                     content: Text(
                       response['message'] ?? 'Request submitted successfully!',

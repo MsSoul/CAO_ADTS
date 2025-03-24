@@ -200,18 +200,29 @@ Widget buildTransferActionButtons(
               builder: (BuildContext dialogContext) {
                 return AlertDialog(
                   backgroundColor: Colors.white,
-                  title: Center(
-                    child: Text(
-                      success
-                          ? '🎉 Transfer Successful!'
-                          : '❌ Transfer Failed!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: success ? AppColors.primaryColor : Colors.red,
+                  title: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        success ? Icons.check_circle : Icons.cancel,
+                        color: success ? Colors.green : Colors.red,
+                        size: 48,
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Text(
+                        success ? 'Transfer Successful!' : 'Transfer Failed!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: success ? AppColors.primaryColor : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  content: Text(message),
+                  content: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                  ),
                   actions: [
                     ElevatedButton(
                       onPressed: () {
