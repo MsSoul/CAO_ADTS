@@ -28,7 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _totalBorrowedCount = 0;
   final int _itemsPerPage = 10;
   final TextEditingController _searchController = TextEditingController();
-  String _selectedFilter = "All"; // Maintain selected filter
+  String _selectedFilter = "All";
 
   @override
   void initState() {

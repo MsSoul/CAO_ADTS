@@ -16,36 +16,51 @@ class _UpdateEmailDialogState extends State<UpdateEmailDialog> {
   final UserApi _userApi = UserApi();
 
   Future<void> _handleUpdateEmail() async {
-    String email = _emailController.text.trim();
+  String email = _emailController.text.trim();
 
-    if (email.isEmpty || !email.contains('@')) {
-      Fluttertoast.showToast(msg: "Please enter a valid email address.");
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final response = await _userApi.updateEmail(email);
-
-      if (response.containsKey("success")) {
-        Fluttertoast.showToast(msg: response["success"]);
-        Navigator.pop(context);
-      } else if (response.containsKey("error")) {
-        Fluttertoast.showToast(msg: response["error"]);
-      } else {
-        Fluttertoast.showToast(msg: "Unexpected error occurred.");
-      }
-    } catch (error) {
-      Fluttertoast.showToast(msg: "Error: $error");
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  // Basic empty check
+  if (email.isEmpty) {
+    Fluttertoast.showToast(msg: "Email cannot be empty.");
+    return;
   }
+
+  // Email format validation using regex
+  final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+  if (!emailRegex.hasMatch(email)) {
+    Fluttertoast.showToast(msg: "Please enter a valid email address.");
+    return;
+  }
+/*
+  // Optional: If you want to block certain domains
+  if (email.endsWith("@example.com")) {
+    Fluttertoast.showToast(msg: "Emails from example.com are not allowed.");
+    return;
+  }*/
+
+  setState(() {
+    _isLoading = true;
+  });
+
+  try {
+    final response = await _userApi.updateEmail(email);
+
+    if (response.containsKey("success")) {
+      Fluttertoast.showToast(msg: response["success"]);
+      Navigator.pop(context);
+    } else if (response.containsKey("error")) {
+      Fluttertoast.showToast(msg: response["error"]);
+    } else {
+      Fluttertoast.showToast(msg: "Unexpected error occurred.");
+    }
+  } catch (error) {
+    Fluttertoast.showToast(msg: "Error: $error");
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
