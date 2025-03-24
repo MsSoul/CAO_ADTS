@@ -44,6 +44,8 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
     List<Map<String, dynamic>> paginatedItems =
         widget.items.sublist(startIndex, endIndex);
 
+    final currencyFormat = NumberFormat("#,##0.00", "en_US");
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Column(
@@ -81,80 +83,68 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                     dataRowMaxHeight: 40,
                     headingRowColor: WidgetStateColor.resolveWith(
                         (states) => AppColors.primaryColor),
-                    columns: const [
-                      DataColumn(
+                    columns: [
+                      const DataColumn(
                           label: Center(
                               child: Text('Action', style: _headerStyle))),
-                      DataColumn(
+                      if (widget.selectedFilter == "Borrowed")
+                        const DataColumn(
+                            label: Center(
+                                child:
+                                    Text('Owner Name', style: _headerStyle))),
+                      const DataColumn(
                           label:
                               Center(child: Text('Name', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('Description', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
-                              child: Text('Available Quantity',
-                                  style: _headerStyle))),
-                      DataColumn(
+                              child:
+                                  Text('Available Qty', style: _headerStyle))),
+                      const DataColumn(
                           label: Center(
-                              child: Text('Original Quantity',
-                                  style: _headerStyle))),
-                      DataColumn(
+                              child:
+                                  Text('Original Qty', style: _headerStyle))),
+                      const DataColumn(
                           label: Center(
                               child: Text('PAR No', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('PIS No.', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('Prop No.', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('Serial No.', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('MR No.', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('Unit Value', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('Total Value', style: _headerStyle))),
-                      DataColumn(
+                      const DataColumn(
                           label: Center(
                               child: Text('Remarks', style: _headerStyle))),
                     ],
                     rows: paginatedItems.map((item) {
-                      String remarks = item['remarks']?.toString() ?? '';
-
-                      if (widget.selectedFilter == "Borrowed" &&
-                          item['owner_name'] != null) {
-                        String owner = item['owner_name'].toString();
-                        String borrowedDate = "N/A";
-
-                        if (item['createdAt'] != null) {
-                          try {
-                            DateTime parsedDate =
-                                DateTime.parse(item['createdAt']);
-                            borrowedDate =
-                                DateFormat("yyyy-MM-dd").format(parsedDate);
-                          } catch (e) {
-                            borrowedDate = "Invalid Date";
-                          }
-                        }
-
-                        remarks =
-                            "Owned By: $owner \nBorrowed Date: $borrowedDate";
-                      }
-
-                      final currencyFormat = NumberFormat("#,##0.00", "en_US");
-
+                      final remarks = item['remarks']?.toString() ?? '';
                       final isDisabled = widget.isActionDisabled != null &&
                           widget.isActionDisabled!(item);
+
+                      // Either use owner_name if available or show OWNER_EMP_ID
+                      final ownerName = item['owner_name'] ??
+                          item['accountable_name'] ??
+                          "EMP ID: ${item['OWNER_EMP_ID'] ?? 'N/A'}";
 
                       return DataRow(cells: [
                         DataCell(
                           SizedBox(
+                            width: 100, // Fixed width for uniform button size
                             height: 35,
                             child: ElevatedButton(
                               onPressed: isDisabled
@@ -168,22 +158,22 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
                               ),
-                              child: Text(
-                                isDisabled
-                                    ? "Requested"
-                                    : widget
-                                        .actionLabel, // 👉 This line modified
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  isDisabled ? "Requested" : widget.actionLabel,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
+                        if (widget.selectedFilter == "Borrowed")
+                          DataCell(Text(ownerName)),
                         DataCell(Text(item['ITEM_NAME']?.toString() ?? 'N/A')),
                         DataCell(
                             Text(item['DESCRIPTION']?.toString() ?? 'N/A')),
@@ -199,7 +189,17 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                             '₱ ${currencyFormat.format(double.tryParse(item['unit_value'].toString()) ?? 0.0)}')),
                         DataCell(Text(
                             '₱ ${currencyFormat.format(double.tryParse(item['total_value'].toString()) ?? 0.0)}')),
-                        DataCell(Text(remarks)),
+                        DataCell(
+                          Container(
+                            width: 250,
+                            height: 40,
+                            padding: EdgeInsets.all(4),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.vertical,
+                              child: Text(remarks),
+                            ),
+                          ),
+                        )
                       ]);
                     }).toList(),
                   ),

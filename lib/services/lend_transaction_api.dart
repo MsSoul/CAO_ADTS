@@ -56,6 +56,7 @@ class LendTransactionApi {
     required int quantity,
     required int borrowerId,
     required int currentDptId,
+    required int distributedItemId,
   }) async {
     try {
       final requestBody = {
@@ -64,6 +65,7 @@ class LendTransactionApi {
         'quantity': quantity,
         'borrowerId': borrowerId,
         'currentDptId': currentDptId,
+        'distributedItemId': distributedItemId,
       };
 
       // 🔍 Log the request before sending it

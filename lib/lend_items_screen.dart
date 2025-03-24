@@ -84,6 +84,7 @@ class _LendingItemsScreenState extends State<LendingItemsScreen> {
       builder: (context) => LendingTransaction(
         empId: widget.empId,
         itemId: itemId,
+        distributedItemId: item['distributedItemId'],
         itemName: item['ITEM_NAME'],
         description: item['DESCRIPTION'],
         currentDptId: widget.currentDptId,

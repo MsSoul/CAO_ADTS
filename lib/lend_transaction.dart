@@ -14,6 +14,7 @@ class LendingTransaction extends StatefulWidget {
   final int currentDptId;
   final List<Map<String, dynamic>> initialTransactions;
   final int availableQuantity;
+  final int distributedItemId;
 
 
   const LendingTransaction({
@@ -25,6 +26,7 @@ class LendingTransaction extends StatefulWidget {
     required this.currentDptId,
     required this.initialTransactions,
     required this.availableQuantity,
+    required this.distributedItemId,
   });
 
   @override

@@ -238,6 +238,7 @@ Widget buildActionButtons(
                 quantity: quantity,
                 borrowerId: selectedBorrowerId,
                 currentDptId: widget.currentDptId,
+                distributedItemId:widget.distributedItemId,
               );
 
               logger.i("🛠️ API Response: $response");
