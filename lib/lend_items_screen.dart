@@ -41,7 +41,7 @@ class _LendingItemsScreenState extends State<LendingItemsScreen> {
           allItems = items.map((item) {
             return {
               ...item,
-              'distributedItemId': item['distributedItemId'] ?? 0,
+              'DISTRIBUTED_ITEM_ID': item['DISTRIBUTED_ITEM_ID'] ?? 0,
               'ITEM_ID': item['ITEM_ID'],
               'quantity': item['quantity'] as int? ?? 0,
             };
@@ -84,7 +84,7 @@ class _LendingItemsScreenState extends State<LendingItemsScreen> {
       builder: (context) => LendingTransaction(
         empId: widget.empId,
         itemId: itemId,
-        distributedItemId: item['distributedItemId'],
+        distributedItemId: item['DISTRIBUTED_ITEM_ID'],
         itemName: item['ITEM_NAME'],
         description: item['DESCRIPTION'],
         currentDptId: widget.currentDptId,
