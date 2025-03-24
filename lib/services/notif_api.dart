@@ -56,12 +56,12 @@ class NotifApi {
       List<dynamic> data = jsonDecode(response.body);
 
       // 🛑 Log raw API response
-      logger.i("📩 API Response: ${jsonEncode(data)}");
+      //logger.i("📩 API Response: ${jsonEncode(data)}");
 
       // 🛑 Log individual notification dates
-      for (var notif in data) {
+    /*  for (var notif in data) {
         logger.i("📅 Notification Date: ${notif['createdAt']}");
-      }
+      }*/
 
       // ✅ Ensure unread count is correct
       int unreadCount = data.where((notif) => notif['READ'] == 0).length;

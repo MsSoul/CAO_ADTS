@@ -36,7 +36,7 @@ class _NotifScreenState extends State<NotifScreen> {
       List<Map<String, dynamic>> fetchedNotifs =
           await notifApi.fetchNotifications(widget.empId);
 
-      logger.i("📥 Raw Notifications Fetched: $fetchedNotifs");
+      //logger.i("📥 Raw Notifications Fetched: $fetchedNotifs");
 
       setState(() {
         notifications = fetchedNotifs;
@@ -179,12 +179,12 @@ class _NotifScreenState extends State<NotifScreen> {
             const Spacer(),
             PopupMenuButton<String>(
               icon: const Icon(Icons.filter_list,
-                  size: 28, color: Colors.black), // Icon color
-              color: AppColors.primaryColor, // Background color of dropdown
+                  size: 28, color: Colors.black), 
+              color: AppColors.primaryColor, 
               onSelected: (String value) {
                 setState(() {
                   selectedFilter = value;
-                  _sortNotifications(); // Ensure sorting runs inside setState
+                  _sortNotifications(); 
                 });
               },
               itemBuilder: (context) => [
