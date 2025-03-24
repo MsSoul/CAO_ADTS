@@ -40,7 +40,7 @@ class MainDesignState extends State<MainDesign> {
   }
 
   Future<void> fetchFirstLetter() async {
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     String? storedLetter = prefs.getString("firstLetter");
 
@@ -56,7 +56,7 @@ class MainDesignState extends State<MainDesign> {
       UserApi userApi = UserApi();
       Map<String, dynamic> userData = await userApi.getUserDetails();
       String fetchedName = userData['first_name'] ?? "";
-      
+
       if (fetchedName.isNotEmpty) {
         String fetchedLetter = fetchedName[0].toUpperCase();
         await prefs.setString("firstLetter", fetchedLetter);
@@ -69,54 +69,13 @@ class MainDesignState extends State<MainDesign> {
     }
   }
 
-  @override
+ @override
 Widget build(BuildContext context) {
-  return AppBar(
-    title: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Image.asset(
-        'assets/adts_appbar.png',
-        height: 40, // Adjust height as needed
-        fit: BoxFit.contain,
-      ),
-    ),
-    backgroundColor: Colors.white,
-    iconTheme: const IconThemeData(color: Colors.black),
-    elevation: 0,
-    leading: Padding(
-      padding: const EdgeInsets.only(left: 16.0),
-      child: CircleAvatar(
-        radius: 30,
-        backgroundColor: AppColors.primaryColor,
-        child: Text(
-          firstLetter,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    ),
-    actions: [
-      IconButton(
-        onPressed: () {
-          debugPrint("Logging out and returning to login screen...");
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-            (route) => false, // Removes all previous routes
-          );
-        },
-        icon: const Icon(
-          Icons.exit_to_app,
-          color: AppColors.primaryColor,
-          size: 32,
-        ),
-      ),
-    ],
-    flexibleSpace: Container(
+  return PreferredSize(
+    preferredSize: const Size.fromHeight(70),
+    child: Container(
       decoration: const BoxDecoration(
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Color.fromRGBO(0, 0, 0, 0.1),
@@ -124,6 +83,51 @@ Widget build(BuildContext context) {
             offset: Offset(0, 2),
           ),
         ],
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0), 
+              child: CircleAvatar(
+                radius: 25,
+                backgroundColor: AppColors.primaryColor,
+                child: Text(
+                  firstLetter,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Image.asset(
+                'assets/adts_appbar.png',
+                height: 40,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const Spacer(), 
+            IconButton(
+              onPressed: () {
+                debugPrint("Logging out and returning to login screen...");
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              icon: const Icon(
+                Icons.exit_to_app,
+                color: AppColors.primaryColor,
+                size: 32,
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
