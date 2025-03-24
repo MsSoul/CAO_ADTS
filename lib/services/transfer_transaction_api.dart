@@ -128,6 +128,7 @@ class TransferTransactionApi {
     required int quantity,
     required int receiverId,
     required int currentDptId,
+    required int distributedItemId,
   }) async {
     final url =
         Uri.parse('$baseUrl/api/transferTransaction/transfer_Transaction');
@@ -137,6 +138,7 @@ class TransferTransactionApi {
       "itemId": itemId,
       "quantity": quantity,
       "currentDptId": currentDptId,
+      "distributedItemId":distributedItemId,
     };
 
     logger.i("📤 Sending transfer transaction request: $requestBody");

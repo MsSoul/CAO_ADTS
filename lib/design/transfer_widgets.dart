@@ -169,6 +169,7 @@ Widget buildTransferActionButtons(
               quantity: quantity,
               receiverId: selectedReceiverId,
               currentDptId: widget.currentDptId,
+              distributedItemId: widget.distributedItemId,
             );
 
             logger.i("🛠️ API Response: $response");

@@ -11,6 +11,7 @@ class TransferTransactionDialog extends StatefulWidget {
   final String description;
   final int currentDptId;
   final int availableQuantity;
+  final int distributedItemId;
 
   const TransferTransactionDialog({
     super.key,
@@ -20,6 +21,7 @@ class TransferTransactionDialog extends StatefulWidget {
     required this.description,
     required this.currentDptId,
     required this.availableQuantity,
+    required this.distributedItemId,
   });
 
   @override
