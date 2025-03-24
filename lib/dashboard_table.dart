@@ -14,6 +14,14 @@ class DashboardTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sort items by quantity (descending order)
+    final sortedItems = [...items];
+    sortedItems.sort((a, b) {
+      final qtyA = int.tryParse(a['quantity'].toString()) ?? 0;
+      final qtyB = int.tryParse(b['quantity'].toString()) ?? 0;
+      return qtyB.compareTo(qtyA);
+    });
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
@@ -46,10 +54,9 @@ class DashboardTable extends StatelessWidget {
               label: Center(child: Text('Total Value', style: _headerStyle))),
           DataColumn(
               label: Center(
-                  child:
-                      Text('Remarks', style: _headerStyle))), // Remarks updated
+                  child: Text('Remarks', style: _headerStyle))), // Remarks updated
         ],
-        rows: items.map((item) {
+        rows: sortedItems.map((item) {
           String remarks = item['remarks']?.toString() ?? '';
 
           if (selectedFilter == "Borrowed" && item['owner_name'] != null) {
@@ -88,7 +95,7 @@ class DashboardTable extends StatelessWidget {
               Container(
                 width: 250,
                 height: 40,
-                padding: EdgeInsets.all(4),
+                padding: const EdgeInsets.all(4),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
                   child: Text(remarks),
@@ -107,4 +114,3 @@ class DashboardTable extends StatelessWidget {
     color: Colors.white,
   );
 }
-

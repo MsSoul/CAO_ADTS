@@ -36,15 +36,23 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
 
   @override
   Widget build(BuildContext context) {
+    final currencyFormat = NumberFormat("#,##0.00", "en_US");
+
+    // ✅ Sort the entire items list before pagination
+    List<Map<String, dynamic>> sortedItems = [...widget.items];
+    sortedItems.sort((a, b) {
+      final qtyA = int.tryParse(a['quantity']?.toString() ?? '0') ?? 0;
+      final qtyB = int.tryParse(b['quantity']?.toString() ?? '0') ?? 0;
+      return qtyB.compareTo(qtyA); // descending
+    });
+
     int startIndex = currentPage * rowsPerPage;
-    int endIndex = (startIndex + rowsPerPage) > widget.items.length
-        ? widget.items.length
+    int endIndex = (startIndex + rowsPerPage) > sortedItems.length
+        ? sortedItems.length
         : (startIndex + rowsPerPage);
 
     List<Map<String, dynamic>> paginatedItems =
-        widget.items.sublist(startIndex, endIndex);
-
-    final currencyFormat = NumberFormat("#,##0.00", "en_US");
+        sortedItems.sublist(startIndex, endIndex);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -136,7 +144,6 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                       final isDisabled = widget.isActionDisabled != null &&
                           widget.isActionDisabled!(item);
 
-                      // Either use owner_name if available or show OWNER_EMP_ID
                       final ownerName = item['owner_name'] ??
                           item['accountable_name'] ??
                           "EMP ID: ${item['OWNER_EMP_ID'] ?? 'N/A'}";
@@ -144,7 +151,7 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                       return DataRow(cells: [
                         DataCell(
                           SizedBox(
-                            width: 100, // Fixed width for uniform button size
+                            width: 100,
                             height: 35,
                             child: ElevatedButton(
                               onPressed: isDisabled
@@ -193,7 +200,7 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                           Container(
                             width: 250,
                             height: 40,
-                            padding: EdgeInsets.all(4),
+                            padding: const EdgeInsets.all(4),
                             child: SingleChildScrollView(
                               scrollDirection: Axis.vertical,
                               child: Text(remarks),

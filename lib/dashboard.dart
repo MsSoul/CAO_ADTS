@@ -68,8 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _items = items;
           _borrowedItems = borrowedItems;
-          _totalBorrowedCount =
-              totalBorrowedCount; // If you want to store count
+          _totalBorrowedCount = totalBorrowedCount;
           _applyFilter(); // Re-apply any filters after loading data
           _isLoading = false;
         });
@@ -154,7 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: AppColors.primaryColor),
             ),
             SizedBox(
-              height: 40,
+              height: 50,
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -162,7 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   prefixIcon: const Icon(Icons.search,
                       size: 18, color: AppColors.primaryColor),
                   contentPadding:
-                      const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      const EdgeInsets.symmetric( vertical: 5, horizontal: 8),
                   filled: true,
                   fillColor: Colors.white,
                   enabledBorder: OutlineInputBorder(
@@ -216,14 +215,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       color: AppColors.primaryColor, width: 1),
                                 ),
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
+                                    const EdgeInsets.symmetric(horizontal: 8),
                                 child: DropdownButton<String>(
                                   value: _selectedFilter,
-                                  items: ["All", "Owned", "Borrowed"]
-                                      .map((filter) {
+                                  items: [
+                                    "All (${_items.length + _borrowedItems.length})",
+                                    "Owned (${_items.length})",
+                                    "Borrowed ($_totalBorrowedCount)"
+                                  ].map((filterWithCount) {
+                                    // Extract filter keyword (All, Owned, Borrowed) from the string
+                                    String filterKeyword =
+                                        filterWithCount.split(' ').first;
                                     return DropdownMenuItem(
-                                      value: filter,
-                                      child: Text(filter,
+                                      value: filterKeyword,
+                                      child: Text(filterWithCount,
                                           style: const TextStyle(
                                               color: Colors.black)),
                                     );
