@@ -91,6 +91,45 @@ class UserApi {
     }
   }
 
+  Future<Map<String, dynamic>> verifyOtp(int empId, String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/verify-otp/verify-otp'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "emp_id": empId,
+          "otp": otp,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return {"error": "Server error: ${response.statusCode}"};
+      }
+    } catch (e) {
+      return {"error": "Failed to verify OTP. Please try again."};
+    }
+  }
+
+  Future<Map<String, dynamic>> resendOtp(int empId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/users/resend-otp'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "emp_id": empId,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return {"error": "Server error: ${response.statusCode}"};
+      }
+    } catch (e) {
+      return {"error": "Failed to resend OTP. Please try again."};
+    }
+  }
+
   // 🔹 Get User Details Function
   Future<Map<String, dynamic>> getUserDetails() async {
     try {
@@ -153,82 +192,82 @@ class UserApi {
   }
 
 // 🔹 Change Password Function
-Future<Map<String, dynamic>> changePassword(
-    String currentPassword, String newPassword) async {
-  try {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? empId = prefs.getInt("emp_id");
+  Future<Map<String, dynamic>> changePassword(
+      String currentPassword, String newPassword) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      int? empId = prefs.getInt("emp_id");
 
-    if (empId == null) {
-      logger.w("Employee ID not found in preferences");
-      return {"error": "Employee ID not found. Please log in again."};
+      if (empId == null) {
+        logger.w("Employee ID not found in preferences");
+        return {"error": "Employee ID not found. Please log in again."};
+      }
+
+      logger.i("Sending password change request for emp_id=$empId");
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/api/users/change-password"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "emp_id": empId,
+          "old_password": currentPassword.trim(), // ✅ FIXED HERE
+          "new_password": newPassword.trim(),
+        }),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        logger.i("Password change successful: ${responseData["success"]}");
+        return {"success": responseData["success"] ?? "Password changed."};
+      } else {
+        logger.w("Password change failed: ${responseData["error"]}");
+        return {"error": responseData["error"] ?? "Failed to change password."};
+      }
+    } catch (e) {
+      logger.e("Change password error: $e");
+      return {
+        "error": "Network error. Please check your connection and try again."
+      };
     }
-
-    logger.i("Sending password change request for emp_id=$empId");
-
-    final response = await http.post(
-      Uri.parse("$baseUrl/api/users/change-password"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "emp_id": empId,
-        "old_password": currentPassword.trim(), // ✅ FIXED HERE
-        "new_password": newPassword.trim(),
-      }),
-    );
-
-    final Map<String, dynamic> responseData = jsonDecode(response.body);
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      logger.i("Password change successful: ${responseData["success"]}");
-      return {"success": responseData["success"] ?? "Password changed."};
-    } else {
-      logger.w("Password change failed: ${responseData["error"]}");
-      return {"error": responseData["error"] ?? "Failed to change password."};
-    }
-  } catch (e) {
-    logger.e("Change password error: $e");
-    return {
-      "error": "Network error. Please check your connection and try again."
-    };
   }
-}
+
 // 🔹 Update Email Function
-Future<Map<String, dynamic>> updateEmail(String newEmail) async {
-  try {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    int? empId = prefs.getInt("emp_id");
+  Future<Map<String, dynamic>> updateEmail(String newEmail) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      int? empId = prefs.getInt("emp_id");
 
-    if (empId == null) {
-      logger.w("Employee ID not found in preferences");
-      return {"error": "Employee ID not found. Please log in again."};
+      if (empId == null) {
+        logger.w("Employee ID not found in preferences");
+        return {"error": "Employee ID not found. Please log in again."};
+      }
+
+      logger.i("Sending email update request for emp_id=$empId");
+
+      final response = await http.put(
+        Uri.parse("$baseUrl/api/users/update-email"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "emp_id": empId,
+          "new_email": newEmail.trim(),
+        }),
+      );
+
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        logger.i("Email update successful: ${responseData["success"]}");
+        return {"success": responseData["success"] ?? "Email updated."};
+      } else {
+        logger.w("Email update failed: ${responseData["error"]}");
+        return {"error": responseData["error"] ?? "Failed to update email."};
+      }
+    } catch (e) {
+      logger.e("Update email error: $e");
+      return {
+        "error": "Network error. Please check your connection and try again."
+      };
     }
-
-    logger.i("Sending email update request for emp_id=$empId");
-
-    final response = await http.put(
-      Uri.parse("$baseUrl/api/users/update-email"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "emp_id": empId,
-        "new_email": newEmail.trim(),
-      }),
-    );
-
-    final Map<String, dynamic> responseData = jsonDecode(response.body);
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      logger.i("Email update successful: ${responseData["success"]}");
-      return {"success": responseData["success"] ?? "Email updated."};
-    } else {
-      logger.w("Email update failed: ${responseData["error"]}");
-      return {"error": responseData["error"] ?? "Failed to update email."};
-    }
-  } catch (e) {
-    logger.e("Update email error: $e");
-    return {
-      "error": "Network error. Please check your connection and try again."
-    };
   }
-}
-
 }
