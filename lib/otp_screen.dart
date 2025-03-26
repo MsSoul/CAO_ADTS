@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../design/colors.dart';
-import '../design/login_design.dart'; 
+import '../design/login_design.dart';
 import 'services/user_api.dart';
-import 'home.dart';
-import 'update_user.dart';
 
 class OtpScreen extends StatefulWidget {
   final int empId;
@@ -52,27 +49,8 @@ class _OtpScreenState extends State<OtpScreen> {
       Fluttertoast.showToast(msg: response["error"]);
     } else {
       Fluttertoast.showToast(msg: response["msg"]);
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('empId', widget.empId);
-      await prefs.setInt('currentDptId', widget.currentDptId);
-
-      if (response["redirect"] == "update") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  UpdateUserScreen(empId: widget.empId)),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => HomeScreen(
-                  empId: widget.empId,
-                  currentDptId: widget.currentDptId)),
-        );
-      }
+      // Instead of going to home or update screen, return success
+      Navigator.pop(context, true);
     }
   }
 

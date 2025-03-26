@@ -90,7 +90,7 @@ class UserApi {
       };
     }
   }
-
+  
   Future<Map<String, dynamic>> verifyOtp(int empId, String otp) async {
     try {
       final response = await http.post(
@@ -160,21 +160,26 @@ class UserApi {
       return {"error": "Network error"};
     }
   }
+Future<Map<String, dynamic>> verifyEmailAndId(String email, String idNumber) async {
+  try {
+    final response = await http.post(
+      Uri.parse("$baseUrl/api/users/verify-email-id"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email, "id_number": idNumber}),
+    );
 
-  Future<Map<String, dynamic>> verifyEmailAndId(
-      String email, String idNumber) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/api/users/verify-email-id"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "id_number": idNumber}),
-      );
+    final decodedResponse = jsonDecode(response.body);
+    logger.d("Verify Email & ID Response: $decodedResponse");
 
-      return jsonDecode(response.body);
-    } catch (e) {
-      return {"error": "An error occurred. Please try again."};
+    if (decodedResponse.containsKey("data")) {
+      return decodedResponse["data"];
     }
+
+    return decodedResponse;
+  } catch (e) {
+    return {"error": "An error occurred. Please try again."};
   }
+}
 
   Future<Map<String, dynamic>> resetPassword(
       String email, String newPassword) async {
