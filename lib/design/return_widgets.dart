@@ -106,6 +106,7 @@ String _capitalizeWords(String text) {
 Future<void> showSuccessDialog({required BuildContext context}) async {
   return showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext dialogContext) {
       return AlertDialog(
         backgroundColor: Colors.white,
@@ -129,8 +130,7 @@ Future<void> showSuccessDialog({required BuildContext context}) async {
           Center(
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Close success dialog
-                Navigator.of(context).pop(); // Close return transaction dialog
+                Navigator.of(dialogContext).pop(); // Just close the success dialog
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
@@ -145,6 +145,57 @@ Future<void> showSuccessDialog({required BuildContext context}) async {
         ],
       );
     },
+  );
+}
+
+Widget buildTextField(
+  String label,
+  String hint, {
+  TextEditingController? controller,
+  Function(String)? onChanged,
+  String? errorText,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+
+      // Show Error Message Below Label
+      if (errorText != null)
+        Padding(
+          padding: const EdgeInsets.only(
+              top: 2, bottom: 3), // Space between label & error
+          child: Text(
+            errorText,
+            style: const TextStyle(
+                color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+        ),
+
+      // Text Field
+      SizedBox(
+        height: 40,
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+            filled: true,
+            fillColor: Colors.white,
+            hintText: hint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(6),
+              borderSide:
+                  const BorderSide(color: AppColors.primaryColor, width: 1),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 3), // Consistent spacing
+    ],
   );
 }
 Widget buildReturnDialogTitle() {

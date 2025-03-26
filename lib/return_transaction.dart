@@ -38,7 +38,33 @@ class ReturnTransaction extends StatefulWidget {
 
 class ReturnTransactionState extends State<ReturnTransaction> {
   final ReturnTransactionApi returnApi = ReturnTransactionApi();
+  final TextEditingController quantityController = TextEditingController();
   final Logger logger = Logger();
+  String? quantityError;
+
+  @override
+  void dispose() {
+    quantityController.dispose();
+    super.dispose();
+  }
+
+  void _validateQuantity(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        quantityError = "Quantity cannot be empty.";
+      } else {
+        int enteredQuantity = int.tryParse(value) ?? 0;
+        if (enteredQuantity <= 0) {
+          quantityError = "Quantity must be at least 1.";
+        } else if (enteredQuantity > widget.borrowedQuantity) {
+          quantityError =
+              "Maximum borrowed quantity is ${widget.borrowedQuantity}.";
+        } else {
+          quantityError = null;
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +96,21 @@ class ReturnTransactionState extends State<ReturnTransaction> {
                     widget.owner
                         .split(' ')
                         .map((word) => word.isNotEmpty
-                            ? word[0].toUpperCase() + word.substring(1).toLowerCase()
+                            ? word[0].toUpperCase() +
+                                word.substring(1).toLowerCase()
                             : '')
                         .join(' '),
                   ),
                   buildInfoBox('Borrower:', widget.borrower),
-                  buildInfoBox('Quantity:', widget.quantity.toString()),
+                  const SizedBox(height: 10),
+                  buildTextField(
+                    'Quantity:',
+                    'Enter quantity to return',
+                    controller: quantityController,
+                    errorText: quantityError,
+                    onChanged: _validateQuantity,
+                  ),
+                  const SizedBox(height: 20),
                   buildReturnActionButton(context),
                 ],
               ),
@@ -101,11 +136,31 @@ class ReturnTransactionState extends State<ReturnTransaction> {
         const SizedBox(width: 10),
         ElevatedButton(
           onPressed: () async {
+            int qty = int.tryParse(quantityController.text) ?? 0;
+
+            if (qty <= 0 || qty > widget.borrowedQuantity) {
+              setState(() {
+                quantityError = (qty > widget.borrowedQuantity)
+                    ? "Maximum borrowed quantity is ${widget.borrowedQuantity}."
+                    : "Please enter a valid quantity.";
+              });
+
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(quantityError ?? "Invalid quantity"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              return;
+            }
+
             bool confirm = await showReturnConfirmationDialog(
               context: context,
               itemName: widget.itemName,
               description: widget.description,
-              quantity: widget.quantity,
+              quantity: qty,
               ownerName: widget.owner,
               itemId: widget.itemId,
               distributedItemId: widget.distributedItemId,
@@ -113,14 +168,25 @@ class ReturnTransactionState extends State<ReturnTransaction> {
             );
 
             if (confirm) {
-              bool success = await processReturnTransaction(context: context);
+              bool success = await processReturnTransaction(
+                context: context,
+                quantity: qty,
+              );
 
               if (context.mounted && success) {
                 logger.i("✅ Successfully returned itemId: ${widget.itemId}");
-                Navigator.pop(context); // Close dialog
                 await showSuccessDialog(context: context);
+                if (context.mounted) {
+                  Navigator.pop(context, true); // return true to parent
+                }
               } else {
                 logger.e("❌ Failed to return itemId: ${widget.itemId}");
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Failed to process return."),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             }
           },
@@ -134,21 +200,25 @@ class ReturnTransactionState extends State<ReturnTransaction> {
     );
   }
 
-  Future<bool> processReturnTransaction({required BuildContext context}) async {
-    logger.i("Processing return for itemId: ${widget.itemId} with quantity: ${widget.quantity}");
+  Future<bool> processReturnTransaction({
+    required BuildContext context,
+    required int quantity,
+  }) async {
+    logger.i(
+        "Processing return for itemId: ${widget.itemId} with quantity: $quantity");
 
     bool success = await returnApi.processReturnTransaction(
       borrowerId: widget.empId,
       ownerId: widget.ownerId,
       itemId: widget.itemId,
-      quantity: widget.quantity,
+      quantity: quantity,
       currentDptId: widget.currentDptId,
       distributedItemId: widget.distributedItemId,
     );
 
     logger.i("🔎 ReturnTransaction Data: "
         "ItemId=${widget.itemId}, ItemName=${widget.itemName}, "
-        "Description=${widget.description}, Quantity=${widget.quantity}, "
+        "Description=${widget.description}, Quantity=$quantity, "
         "Owner=${widget.owner} (ID: ${widget.ownerId}), "
         "Borrower=${widget.borrower} (ID: ${widget.empId}), "
         "DistributedItemId=${widget.distributedItemId}");

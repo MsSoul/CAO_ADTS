@@ -91,44 +91,48 @@ class _ReturnItemsScreenState extends State<ReturnItemsScreen> {
   }
 
   Future<void> _onReturnPressed(Map<String, dynamic> item) async {
-    if (item['hasReturnRequest'] == true) return;
+  if (item['hasReturnRequest'] == true) return;
 
-    String? fetchedName = await borrowTransactionApi.fetchUserName(empId);
-    log.i("🔍 Borrower Name Fetched: $fetchedName");
+  String? fetchedName = await borrowTransactionApi.fetchUserName(empId);
+  log.i("🔍 Borrower Name Fetched: $fetchedName");
 
-    String borrowerName = fetchedName;
-    int distributedItemId = item['distributed_item_id'] ?? 0;
-    int itemId = item['ITEM_ID'] ?? 0;
-    String itemName = item['ITEM_NAME'] ?? "Unnamed Item";
-    String description = item['DESCRIPTION'] ?? "No description available";
-    int borrowedQuantity = (item['quantity'] as int?) ?? 0;
-    String ownerName = item['remarks']?.contains("Owned By:")
-        ? item['remarks'].split("\n")[0].replaceFirst("Owned By: ", "")
-        : "Unknown Owner";
-    int ownerId = (item['owner_emp_id'] as int?) ?? 0;
+  String borrowerName = fetchedName;
+  int distributedItemId = item['distributed_item_id'] ?? 0;
+  int itemId = item['ITEM_ID'] ?? 0;
+  String itemName = item['ITEM_NAME'] ?? "Unnamed Item";
+  String description = item['DESCRIPTION'] ?? "No description available";
+  int borrowedQuantity = (item['quantity'] as int?) ?? 0;
+  String ownerName = item['remarks']?.contains("Owned By:")
+      ? item['remarks'].split("\n")[0].replaceFirst("Owned By: ", "")
+      : "Unknown Owner";
+  int ownerId = (item['owner_emp_id'] as int?) ?? 0;
 
-    log.i(
-        "🛠 Opening ReturnTransaction: ITEM_ID=$itemId, DistributedItemId=$distributedItemId");
+  log.i(
+      "🛠 Opening ReturnTransaction: ITEM_ID=$itemId, DistributedItemId=$distributedItemId");
 
-    if (context.mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => ReturnTransaction(
-          empId: empId,
-          currentDptId: widget.currentDptId,
-          distributedItemId: distributedItemId,
-          itemId: itemId,
-          itemName: itemName,
-          description: description,
-          ownerId: ownerId,
-          owner: ownerName,
-          borrower: borrowerName,
-          borrowedQuantity: borrowedQuantity,
-          quantity: borrowedQuantity,
-        ),
-      );
-    }
+  if (context.mounted) {
+    final result = await showDialog(
+  context: context,
+  builder: (context) => ReturnTransaction(
+    empId: empId,
+    currentDptId: widget.currentDptId,
+    distributedItemId: distributedItemId,
+    itemId: itemId,
+    itemName: itemName,
+    description: description,
+    ownerId: ownerId,
+    owner: ownerName,
+    borrower: borrowerName,
+    borrowedQuantity: borrowedQuantity,
+    quantity: borrowedQuantity,
+  ),
+);
+
+if (result == true) {
+_loadBorrowedItems(); // Refresh the screen
+}
   }
+}
 
   @override
   Widget build(BuildContext context) {
