@@ -1,11 +1,10 @@
-//filename:lib/notification.dart
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
 import '../services/notif_api.dart';
 import '../services/config.dart';
 import 'design/colors.dart';
-import 'design/nav_bar.dart';
+import 'notif_message.dart'; // keep this for the generateMessage() function
 
 class NotifScreen extends StatefulWidget {
   final int empId;
@@ -21,8 +20,9 @@ class _NotifScreenState extends State<NotifScreen> {
   final Logger logger = Logger();
   List<Map<String, dynamic>> notifications = [];
   bool isLoading = true;
-  String selectedFilter = "Unread First"; // Default sorting option
-  bool showAllNotifications = false; // Flag to control visibility
+  String selectedFilter = "Unread First";
+  bool showAllNotifications = false;
+  final ValueNotifier<int> unreadNotifCount = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -30,48 +30,42 @@ class _NotifScreenState extends State<NotifScreen> {
     _fetchNotifications();
     _setupSocket();
   }
+Future<void> _fetchNotifications() async {
+  try {
+    List<Map<String, dynamic>> fetchedNotifs =
+        await notifApi.fetchNotifications(widget.empId);
 
-  Future<void> _fetchNotifications() async {
-    try {
-      List<Map<String, dynamic>> fetchedNotifs =
-          await notifApi.fetchNotifications(widget.empId);
+    setState(() {
+      notifications = fetchedNotifs;
+      isLoading = false;
+      _sortNotifications();
+    });
 
-      //logger.i("📥 Raw Notifications Fetched: $fetchedNotifs");
-
-      setState(() {
-        notifications = fetchedNotifs;
-        isLoading = false;
-        _sortNotifications();
-      });
-
-      // Update unreadNotifCount with the correct unread messages count
-      _updateUnreadCount();
-    } catch (e, stacktrace) {
-      logger.e("❌ Error fetching notifications: $e");
-      logger.e(stacktrace);
-      setState(() => isLoading = false);
-    }
+    _updateUnreadCount(); // Ensure unread count is updated here
+  } catch (e, stacktrace) {
+    logger.e("❌ Error fetching notifications: $e");
+    logger.e(stacktrace);
+    setState(() => isLoading = false);
   }
+}
 
   void _setupSocket() {
     notifApi.initSocket(widget.empId, (newNotif) {
       setState(() {
         notifications.insert(0, newNotif);
         if (_isUnread(newNotif)) {
-          unreadNotifCount.value +=
-              1; // ✅ Increase count for new unread messages
+          unreadNotifCount.value += 1;
         }
       });
 
-      // 🎉 Show a snackbar alert
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("🔔 New notification: ${newNotif['message']}"),
+          content: Text("🔔 New notification: ${generateMessage(newNotif)}"),
           duration: const Duration(seconds: 3),
         ),
       );
 
-      logger.i("🔔 New notification received: ${newNotif['message']}");
+      logger.i("🔔 New notification received: ${generateMessage(newNotif)}");
     });
   }
 
@@ -91,7 +85,6 @@ class _NotifScreenState extends State<NotifScreen> {
           notifications[index]['read'] = 1;
         });
 
-        // 🛑 Reduce unread count dynamically
         unreadNotifCount.value = (unreadNotifCount.value - 1).clamp(0, 999);
 
         logger.i("✅ Notification marked as read (ID: $notifId)");
@@ -107,56 +100,50 @@ class _NotifScreenState extends State<NotifScreen> {
 
   void _updateUnreadCount() {
     int unreadCount = notifications.where((notif) => _isUnread(notif)).length;
-    unreadNotifCount.value = unreadCount; // ✅ Update the badge count
+    unreadNotifCount.value = unreadCount;
     logger.i("🔔 Updated Unread Notifications Count: $unreadCount");
   }
 
   void _sortNotifications() {
-  setState(() {
-    if (selectedFilter == "Newest") {
-      notifications.sort((a, b) {
-        DateTime dateA = DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
-        DateTime dateB = DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
-        return dateB.compareTo(dateA); // Newest first
-      });
-    } else if (selectedFilter == "Oldest") {
-      notifications.sort((a, b) {
-        DateTime dateA = DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
-        DateTime dateB = DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
-        return dateA.compareTo(dateB); // Oldest first
-      });
-    } else if (selectedFilter == "Unread First") {
-      notifications.sort((a, b) {
-        int unreadA = _isUnread(a) ? 1 : 0;
-        int unreadB = _isUnread(b) ? 1 : 0;
-        return unreadB.compareTo(unreadA); // Unread at the top
-      });
-    }
-  });
-}
+    setState(() {
+      if (selectedFilter == "Newest") {
+        notifications.sort((a, b) {
+          DateTime dateA = DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
+          DateTime dateB = DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
+          return dateB.compareTo(dateA);
+        });
+      } else if (selectedFilter == "Oldest") {
+        notifications.sort((a, b) {
+          DateTime dateA = DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
+          DateTime dateB = DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
+          return dateA.compareTo(dateB);
+        });
+      } else if (selectedFilter == "Unread First") {
+        notifications.sort((a, b) {
+          int unreadA = _isUnread(a) ? 1 : 0;
+          int unreadB = _isUnread(b) ? 1 : 0;
+          return unreadB.compareTo(unreadA);
+        });
+      }
+    });
+  }
 
+  String _formatDate(String? dateString) {
+    if (dateString == null) return "Unknown date";
+
+    try {
+      DateTime date = DateTime.parse(dateString).toLocal();
+      return DateFormat('MMM dd, yyyy hh:mm a').format(date);
+    } catch (e) {
+      logger.e("❌ Date parsing error: $e");
+      return "Invalid date";
+    }
+  }
 
   @override
   void dispose() {
     notifApi.dispose();
     super.dispose();
-  }
-
-  String _formatDate(String? dateString) {
-  if (dateString == null) return "Unknown date";
-  
-  try {
-    DateTime date = DateTime.parse(dateString).toLocal(); // Convert to local timezone
-    return DateFormat('MMM dd, yyyy hh:mm a').format(date);
-  } catch (e) {
-    logger.e("❌ Date parsing error: $e");
-    return "Invalid date";
-  }
-}
-
-
-  bool isUnread(Map<String, dynamic> notif) {
-    return (notif['read'] ?? notif['READ'] ?? 0) == 0;
   }
 
   @override
@@ -178,30 +165,26 @@ class _NotifScreenState extends State<NotifScreen> {
             ),
             const Spacer(),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.filter_list,
-                  size: 28, color: Colors.black), 
-              color: AppColors.primaryColor, 
+              icon: const Icon(Icons.filter_list, size: 28, color: Colors.black),
+              color: AppColors.primaryColor,
               onSelected: (String value) {
                 setState(() {
                   selectedFilter = value;
-                  _sortNotifications(); 
+                  _sortNotifications();
                 });
               },
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: "Newest",
-                  child: Text("Sort by Newest",
-                      style: TextStyle(color: Colors.white)),
+                  child: Text("Sort by Newest", style: TextStyle(color: Colors.white)),
                 ),
                 const PopupMenuItem(
                   value: "Oldest",
-                  child: Text("Sort by Oldest",
-                      style: TextStyle(color: Colors.white)),
+                  child: Text("Sort by Oldest", style: TextStyle(color: Colors.white)),
                 ),
                 const PopupMenuItem(
                   value: "Unread First",
-                  child: Text("Sort by Unread First",
-                      style: TextStyle(color: Colors.white)),
+                  child: Text("Sort by Unread First", style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -216,8 +199,7 @@ class _NotifScreenState extends State<NotifScreen> {
                   ? const Center(
                       child: Text(
                         "No new notifications!",
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                     )
                   : Column(
@@ -236,33 +218,19 @@ class _NotifScreenState extends State<NotifScreen> {
 
                               return Card(
                                 elevation: 4,
-                                color: isUnreadNotif
-                                    ? Colors.blue.shade50
-                                    : Colors.white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                                color: isUnreadNotif ? Colors.blue.shade50 : Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
                                   leading: Icon(
                                     Icons.notifications,
-                                    color: isUnreadNotif
-                                        ? AppColors.primaryColor
-                                        : Colors.grey,
+                                    color: isUnreadNotif ? AppColors.primaryColor : Colors.grey,
                                   ),
-                                  title: RichText(
-                                    text: TextSpan(
-                                      text: (notif['message'] ??
-                                              notif['MESSAGE'] ??
-                                              "No message")
-                                          .split('\n')
-                                          .take(2)
-                                          .join('\n'),
-                                      style: TextStyle(
-                                        fontWeight: isUnreadNotif
-                                            ? FontWeight.bold
-                                            : FontWeight.normal,
-                                        color: Colors.black,
-                                        fontSize: 16,
-                                      ),
+                                  title: Text(
+                                    generateMessage(notif).split('\n').take(4).join('\n'),
+                                    style: TextStyle(
+                                      fontWeight: isUnreadNotif ? FontWeight.bold : FontWeight.normal,
+                                      color: Colors.black,
+                                      fontSize: 14,
                                     ),
                                   ),
                                   subtitle: Text(
@@ -276,9 +244,7 @@ class _NotifScreenState extends State<NotifScreen> {
                                     isUnreadNotif ? "Unread" : "Read",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: isUnreadNotif
-                                          ? AppColors.primaryColor
-                                          : Colors.grey,
+                                      color: isUnreadNotif ? AppColors.primaryColor : Colors.grey,
                                     ),
                                   ),
                                   onTap: () {
@@ -288,15 +254,12 @@ class _NotifScreenState extends State<NotifScreen> {
                                         backgroundColor: Colors.white,
                                         title: const Text("Notification"),
                                         content: SingleChildScrollView(
-                                          child: Text(notif['message'] ??
-                                              notif['MESSAGE'] ??
-                                              "No message"),
+                                          child: Text(generateMessage(notif)),
                                         ),
                                         actions: [
                                           ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  AppColors.primaryColor,
+                                              backgroundColor: AppColors.primaryColor,
                                             ),
                                             onPressed: () {
                                               Navigator.pop(context);
@@ -304,8 +267,7 @@ class _NotifScreenState extends State<NotifScreen> {
                                             },
                                             child: const Text(
                                               "Close",
-                                              style: TextStyle(
-                                                  color: Colors.white),
+                                              style: TextStyle(color: Colors.white),
                                             ),
                                           ),
                                         ],
