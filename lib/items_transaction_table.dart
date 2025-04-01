@@ -23,6 +23,11 @@ class ItemsTransactionTable extends StatefulWidget {
 }
 
 class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
+  static const TextStyle _headerStyle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
   int currentPage = 0;
   static const int rowsPerPage = 10;
 
@@ -141,8 +146,13 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                     ],
                     rows: paginatedItems.map((item) {
                       final remarks = item['remarks']?.toString() ?? '';
-                      final isDisabled = widget.isActionDisabled != null &&
-                          widget.isActionDisabled!(item);
+                      final availableQuantity =
+                          int.tryParse(item['quantity']?.toString() ?? '0') ??
+                              0;
+                      final hasReturnRequest = item['hasReturnRequest'] == true;
+
+                      // Disable action button if quantity is zero or there's a return request
+                      final isDisabled = availableQuantity == 0 || hasReturnRequest;
 
                       final ownerName = item['owner_name'] ??
                           item['accountable_name'] ??
@@ -169,7 +179,8 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
                               child: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  isDisabled ? "Requested" : widget.actionLabel,
+                                  widget
+                                      .actionLabel, // ✅ Always display actionLabel
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -218,9 +229,4 @@ class _ItemsTransactionTableState extends State<ItemsTransactionTable> {
       },
     );
   }
-
-  static const TextStyle _headerStyle = TextStyle(
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-  );
 }
