@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import '../services/transfer_transaction_api.dart';
 import '../services/config.dart';
 import '../design/colors.dart';
+import 'nav_bar.dart';
 
 //int? selectedReceiverId;
 
@@ -228,7 +229,17 @@ Widget buildTransferActionButtons(
                       onPressed: () {
                         logger.i("🎉 Success/Error dialog closed.");
                         Navigator.of(dialogContext).pop();
-                        if (success) Navigator.of(context).pop();
+                        if (success) {
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            if (context.mounted) {
+                              Navigator.of(context)
+                                  .pop(); // Close return transaction dialog
+                            }
+                            // 🔄 Reload inbox notifications
+                            unreadNotifCount
+                                .value++; // Triggers ValueNotifier to refresh UI
+                          });
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:

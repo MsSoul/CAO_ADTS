@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'colors.dart';
 import 'package:logger/logger.dart';
+import 'nav_bar.dart';
 
 final logger = Logger();
 
@@ -102,7 +103,6 @@ String _capitalizeWords(String text) {
           : '')
       .join(' ');
 }
-
 Future<void> showSuccessDialog({required BuildContext context}) async {
   return showDialog(
     context: context,
@@ -130,7 +130,14 @@ Future<void> showSuccessDialog({required BuildContext context}) async {
             child: ElevatedButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop(); // Close success dialog
-                Navigator.of(context).pop(); // Close borrow transaction dialog
+
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  if (context.mounted) {
+                    Navigator.of(context).pop(); // Close borrow transaction dialog
+                  }
+                  // 🔄 Reload inbox notifications
+                  unreadNotifCount.value++; // Triggers ValueNotifier to refresh UI
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
@@ -147,3 +154,6 @@ Future<void> showSuccessDialog({required BuildContext context}) async {
     },
   );
 }
+
+
+

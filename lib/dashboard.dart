@@ -141,17 +141,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     int totalPages = (_filteredItems.length / _itemsPerPage).ceil();
 
     return Scaffold(
+      
       appBar: AppBar(
+        
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          
           children: [
+            const SizedBox(height: 5),
             const Text(
               'Dashboard',
               style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 20,
+                  fontSize: 22,
                   color: AppColors.primaryColor),
             ),
+            const SizedBox(height: 5),
             SizedBox(
               height: 50,
               child: TextField(
@@ -180,7 +185,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        toolbarHeight: 80,
+        toolbarHeight: 100,
       ),
       body: RefreshIndicator(
         onRefresh: () async {

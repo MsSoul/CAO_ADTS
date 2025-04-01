@@ -73,34 +73,38 @@ class BottomNavBarState extends State<BottomNavBar> {
     );
   }
 
-  /// ✅ Separate method for the Inbox icon to properly listen to changes
-  Widget _buildInboxIcon() {
-    return ValueListenableBuilder<int>(
-      valueListenable: unreadNotifCount,
-      builder: (context, count, child) {
-        return Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: _selectedIndex == 0 ? AppColors.primaryColor : Colors.transparent,
-            shape: BoxShape.circle,
+/// ✅ Separate method for the Inbox icon to properly listen to changes
+Widget _buildInboxIcon() {
+  return ValueListenableBuilder<int>(
+    valueListenable: unreadNotifCount,
+    builder: (context, count, child) {
+      return Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: _selectedIndex == 0 ? AppColors.primaryColor : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: badges.Badge(
+          badgeContent: count > 0
+              ? Text(
+                  "$count", // Ensure count is properly converted
+                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                )
+              : null,
+          showBadge: count > 0,
+          badgeStyle: const badges.BadgeStyle(
+            badgeColor: Colors.red,
           ),
-          child: badges.Badge(
-            badgeContent: count > 0
-                ? Text(count.toString(), style: const TextStyle(color: Colors.white, fontSize: 12))
-                : null,
-            showBadge: count > 0,
-            badgeStyle: const badges.BadgeStyle(
-              badgeColor: Colors.red,
-            ),
-            child: Icon(
-              Icons.mail_outline,
-              color: _selectedIndex == 0 ? Colors.white : Colors.grey,
-            ),
+          child: Icon(
+            Icons.mail_outline,
+            color: _selectedIndex == 0 ? Colors.white : Colors.grey,
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
 
   BottomNavigationBarItem _buildNavBarItem({
     required IconData icon,

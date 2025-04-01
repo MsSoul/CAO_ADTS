@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'colors.dart';
 import 'package:logger/logger.dart';
 import '../services/lend_transaction_api.dart';
-import '../services/config.dart'; // Import Config
+import '../services/config.dart';
+import 'nav_bar.dart';
 
 final Logger logger = Logger();
 final LendTransactionApi lendTransactionApi =
@@ -99,6 +100,7 @@ Widget buildTextField(
     ],
   );
 }
+
 // Add button function
 Widget buildActionButtons(
     BuildContext context,
@@ -131,7 +133,8 @@ Widget buildActionButtons(
         child: ElevatedButton(
           onPressed: () async {
             logger.i("📌 Request button clicked!");
-            logger.i("🆔 Item ID being sent: ${widget.itemId}"); // Debugging item ID
+            logger.i(
+                "🆔 Item ID being sent: ${widget.itemId}"); // Debugging item ID
 
             int? quantity = int.tryParse(qtyController.text);
 
@@ -238,7 +241,7 @@ Widget buildActionButtons(
                 quantity: quantity,
                 borrowerId: selectedBorrowerId,
                 currentDptId: widget.currentDptId,
-                distributedItemId:widget.distributedItemId,
+                distributedItemId: widget.distributedItemId,
               );
 
               logger.i("🛠️ API Response: $response");
@@ -265,7 +268,8 @@ Widget buildActionButtons(
                   return AlertDialog(
                     backgroundColor: Colors.white,
                     title: const Center(
-                      child: Icon(Icons.check_circle, color: Colors.green, size: 48),
+                      child: Icon(Icons.check_circle,
+                          color: Colors.green, size: 48),
                     ),
                     content: Text(
                       response['message'] ?? 'Request submitted successfully!',
@@ -277,7 +281,15 @@ Widget buildActionButtons(
                         onPressed: () {
                           logger.i("🎉 Success dialog closed by user.");
                           Navigator.of(successContext).pop();
-                          Navigator.of(context).pop();
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            if (context.mounted) {
+                              Navigator.of(context)
+                                  .pop(); // Close borrow transaction dialog
+                            }
+                            // 🔄 Reload inbox notifications
+                            unreadNotifCount
+                                .value++; // Triggers ValueNotifier to refresh UI
+                          });
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryColor,

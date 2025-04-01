@@ -54,27 +54,26 @@ class _NotifScreenState extends State<NotifScreen> {
     }
   }
 
-  void _setupSocket() {
-    notifApi.initSocket(widget.empId, (newNotif) {
-      setState(() {
-        notifications.insert(0, newNotif);
-        if (_isUnread(newNotif)) {
-          unreadNotifCount.value +=
-              1; // ✅ Increase count for new unread messages
-        }
-      });
-
-      // 🎉 Show a snackbar alert
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("🔔 New notification: ${generateMessage(newNotif)}"),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-
-      logger.i("🔔 New notification received: ${newNotif['message']}");
+ void _setupSocket() {
+  notifApi.initSocket(widget.empId, (newNotif) {
+    setState(() {
+      notifications.insert(0, newNotif);
+      if (_isUnread(newNotif)) {
+        unreadNotifCount.value += 1; // ✅ Increase count for new unread messages
+      }
     });
-  }
+
+    // 🎉 Show a snackbar alert
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("🔔 New notification: ${generateMessage(newNotif)}"),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    logger.i("🔔 New notification received: ${newNotif['message']}");
+  });
+}
 
   void _markAsRead(int index) async {
     final notif = notifications[index];
@@ -177,7 +176,7 @@ class _NotifScreenState extends State<NotifScreen> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: AppColors.primaryColor,
               ),
             ),
             const Spacer(),

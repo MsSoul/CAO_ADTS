@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'colors.dart';
 import 'package:logger/logger.dart';
+import 'nav_bar.dart';
 
 final logger = Logger();
 
@@ -130,7 +131,17 @@ Future<void> showSuccessDialog({required BuildContext context}) async {
           Center(
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Just close the success dialog
+                Navigator.of(dialogContext).pop(); // Close success dialog
+
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  if (context.mounted) {
+                    Navigator.of(context)
+                        .pop(); // Close return transaction dialog
+                  }
+                  // 🔄 Reload inbox notifications
+                  unreadNotifCount
+                      .value++; // Triggers ValueNotifier to refresh UI
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
@@ -198,6 +209,7 @@ Widget buildTextField(
     ],
   );
 }
+
 Widget buildReturnDialogTitle() {
   return const Center(
     child: Text(
@@ -206,6 +218,7 @@ Widget buildReturnDialogTitle() {
     ),
   );
 }
+
 Widget buildInfoBox(String label, String text) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
