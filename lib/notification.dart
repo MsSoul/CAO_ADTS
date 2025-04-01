@@ -1,10 +1,12 @@
+//filename:lib/notification.dart
+import 'package:adts/notif_message.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart'; // For date formatting
 import '../services/notif_api.dart';
 import '../services/config.dart';
 import 'design/colors.dart';
-import 'notif_message.dart'; // keep this for the generateMessage() function
+import 'design/nav_bar.dart';
 
 class NotifScreen extends StatefulWidget {
   final int empId;
@@ -20,9 +22,8 @@ class _NotifScreenState extends State<NotifScreen> {
   final Logger logger = Logger();
   List<Map<String, dynamic>> notifications = [];
   bool isLoading = true;
-  String selectedFilter = "Unread First";
-  bool showAllNotifications = false;
-  final ValueNotifier<int> unreadNotifCount = ValueNotifier<int>(0);
+  String selectedFilter = "Unread First"; // Default sorting option
+  bool showAllNotifications = false; // Flag to control visibility
 
   @override
   void initState() {
@@ -30,34 +31,40 @@ class _NotifScreenState extends State<NotifScreen> {
     _fetchNotifications();
     _setupSocket();
   }
-Future<void> _fetchNotifications() async {
-  try {
-    List<Map<String, dynamic>> fetchedNotifs =
-        await notifApi.fetchNotifications(widget.empId);
 
-    setState(() {
-      notifications = fetchedNotifs;
-      isLoading = false;
-      _sortNotifications();
-    });
+  Future<void> _fetchNotifications() async {
+    try {
+      List<Map<String, dynamic>> fetchedNotifs =
+          await notifApi.fetchNotifications(widget.empId);
 
-    _updateUnreadCount(); // Ensure unread count is updated here
-  } catch (e, stacktrace) {
-    logger.e("❌ Error fetching notifications: $e");
-    logger.e(stacktrace);
-    setState(() => isLoading = false);
+      //logger.i("📥 Raw Notifications Fetched: $fetchedNotifs");
+
+      setState(() {
+        notifications = fetchedNotifs;
+        isLoading = false;
+        _sortNotifications();
+      });
+
+      // Update unreadNotifCount with the correct unread messages count
+      _updateUnreadCount();
+    } catch (e, stacktrace) {
+      logger.e("❌ Error fetching notifications: $e");
+      logger.e(stacktrace);
+      setState(() => isLoading = false);
+    }
   }
-}
 
   void _setupSocket() {
     notifApi.initSocket(widget.empId, (newNotif) {
       setState(() {
         notifications.insert(0, newNotif);
         if (_isUnread(newNotif)) {
-          unreadNotifCount.value += 1;
+          unreadNotifCount.value +=
+              1; // ✅ Increase count for new unread messages
         }
       });
 
+      // 🎉 Show a snackbar alert
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("🔔 New notification: ${generateMessage(newNotif)}"),
@@ -65,7 +72,7 @@ Future<void> _fetchNotifications() async {
         ),
       );
 
-      logger.i("🔔 New notification received: ${generateMessage(newNotif)}");
+      logger.i("🔔 New notification received: ${newNotif['message']}");
     });
   }
 
@@ -85,6 +92,7 @@ Future<void> _fetchNotifications() async {
           notifications[index]['read'] = 1;
         });
 
+        // 🛑 Reduce unread count dynamically
         unreadNotifCount.value = (unreadNotifCount.value - 1).clamp(0, 999);
 
         logger.i("✅ Notification marked as read (ID: $notifId)");
@@ -100,7 +108,7 @@ Future<void> _fetchNotifications() async {
 
   void _updateUnreadCount() {
     int unreadCount = notifications.where((notif) => _isUnread(notif)).length;
-    unreadNotifCount.value = unreadCount;
+    unreadNotifCount.value = unreadCount; // ✅ Update the badge count
     logger.i("🔔 Updated Unread Notifications Count: $unreadCount");
   }
 
@@ -108,42 +116,51 @@ Future<void> _fetchNotifications() async {
     setState(() {
       if (selectedFilter == "Newest") {
         notifications.sort((a, b) {
-          DateTime dateA = DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
-          DateTime dateB = DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
-          return dateB.compareTo(dateA);
+          DateTime dateA =
+              DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
+          DateTime dateB =
+              DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
+          return dateB.compareTo(dateA); // Newest first
         });
       } else if (selectedFilter == "Oldest") {
         notifications.sort((a, b) {
-          DateTime dateA = DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
-          DateTime dateB = DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
-          return dateA.compareTo(dateB);
+          DateTime dateA =
+              DateTime.tryParse(a['createdAt'] ?? '') ?? DateTime(1970);
+          DateTime dateB =
+              DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime(1970);
+          return dateA.compareTo(dateB); // Oldest first
         });
       } else if (selectedFilter == "Unread First") {
         notifications.sort((a, b) {
           int unreadA = _isUnread(a) ? 1 : 0;
           int unreadB = _isUnread(b) ? 1 : 0;
-          return unreadB.compareTo(unreadA);
+          return unreadB.compareTo(unreadA); // Unread at the top
         });
       }
     });
-  }
-
-  String _formatDate(String? dateString) {
-    if (dateString == null) return "Unknown date";
-
-    try {
-      DateTime date = DateTime.parse(dateString).toLocal();
-      return DateFormat('MMM dd, yyyy hh:mm a').format(date);
-    } catch (e) {
-      logger.e("❌ Date parsing error: $e");
-      return "Invalid date";
-    }
   }
 
   @override
   void dispose() {
     notifApi.dispose();
     super.dispose();
+  }
+
+  String _formatDate(String? dateString) {
+    if (dateString == null) return "Unknown date";
+
+    try {
+      DateTime date =
+          DateTime.parse(dateString).toLocal(); // Convert to local timezone
+      return DateFormat('MMM dd, yyyy hh:mm a').format(date); // Added yyyy
+    } catch (e) {
+      logger.e("❌ Date parsing error: $e");
+      return "Invalid date";
+    }
+  }
+
+  bool isUnread(Map<String, dynamic> notif) {
+    return (notif['read'] ?? notif['READ'] ?? 0) == 0;
   }
 
   @override
@@ -165,7 +182,8 @@ Future<void> _fetchNotifications() async {
             ),
             const Spacer(),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.filter_list, size: 28, color: Colors.black),
+              icon: const Icon(Icons.filter_list,
+                  size: 28, color: Colors.black),
               color: AppColors.primaryColor,
               onSelected: (String value) {
                 setState(() {
@@ -176,15 +194,18 @@ Future<void> _fetchNotifications() async {
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: "Newest",
-                  child: Text("Sort by Newest", style: TextStyle(color: Colors.white)),
+                  child: Text("Sort by Newest",
+                      style: TextStyle(color: Colors.white)),
                 ),
                 const PopupMenuItem(
                   value: "Oldest",
-                  child: Text("Sort by Oldest", style: TextStyle(color: Colors.white)),
+                  child: Text("Sort by Oldest",
+                      style: TextStyle(color: Colors.white)),
                 ),
                 const PopupMenuItem(
                   value: "Unread First",
-                  child: Text("Sort by Unread First", style: TextStyle(color: Colors.white)),
+                  child: Text("Sort by Unread First",
+                      style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -199,7 +220,8 @@ Future<void> _fetchNotifications() async {
                   ? const Center(
                       child: Text(
                         "No new notifications!",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                     )
                   : Column(
@@ -218,19 +240,31 @@ Future<void> _fetchNotifications() async {
 
                               return Card(
                                 elevation: 4,
-                                color: isUnreadNotif ? Colors.blue.shade50 : Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                color: isUnreadNotif
+                                    ? Colors.blue.shade50
+                                    : Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
                                 child: ListTile(
                                   leading: Icon(
                                     Icons.notifications,
-                                    color: isUnreadNotif ? AppColors.primaryColor : Colors.grey,
+                                    color: isUnreadNotif
+                                        ? AppColors.primaryColor
+                                        : Colors.grey,
                                   ),
-                                  title: Text(
-                                    generateMessage(notif).split('\n').take(4).join('\n'),
-                                    style: TextStyle(
-                                      fontWeight: isUnreadNotif ? FontWeight.bold : FontWeight.normal,
-                                      color: Colors.black,
-                                      fontSize: 14,
+                                  title: RichText(
+                                    text: TextSpan(
+                                      text: generateMessage(notif)
+                                          .split('\n')
+                                          .take(2)
+                                          .join('\n'),
+                                      style: TextStyle(
+                                        fontWeight: isUnreadNotif
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                   ),
                                   subtitle: Text(
@@ -244,7 +278,9 @@ Future<void> _fetchNotifications() async {
                                     isUnreadNotif ? "Unread" : "Read",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: isUnreadNotif ? AppColors.primaryColor : Colors.grey,
+                                      color: isUnreadNotif
+                                          ? AppColors.primaryColor
+                                          : Colors.grey,
                                     ),
                                   ),
                                   onTap: () {
@@ -254,12 +290,14 @@ Future<void> _fetchNotifications() async {
                                         backgroundColor: Colors.white,
                                         title: const Text("Notification"),
                                         content: SingleChildScrollView(
-                                          child: Text(generateMessage(notif)),
+                                          child:
+                                              Text(generateMessage(notif)), // Use generateMessage here
                                         ),
                                         actions: [
                                           ElevatedButton(
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppColors.primaryColor,
+                                              backgroundColor:
+                                                  AppColors.primaryColor,
                                             ),
                                             onPressed: () {
                                               Navigator.pop(context);
@@ -267,7 +305,8 @@ Future<void> _fetchNotifications() async {
                                             },
                                             child: const Text(
                                               "Close",
-                                              style: TextStyle(color: Colors.white),
+                                              style: TextStyle(
+                                                  color: Colors.white),
                                             ),
                                           ),
                                         ],
