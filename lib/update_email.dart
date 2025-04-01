@@ -65,6 +65,7 @@ class _UpdateEmailDialogState extends State<UpdateEmailDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: Colors.white,
       title: const Text("Update Email"),
       content: TextField(
         controller: _emailController,
@@ -86,7 +87,7 @@ class _UpdateEmailDialogState extends State<UpdateEmailDialog> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            backgroundColor: Colors.grey[400],
+            backgroundColor: Colors.grey[200],
           ),
           onPressed: () => Navigator.pop(context),
           child: const Text(

@@ -95,6 +95,7 @@ class _UpdatePasswordDialogState extends State<UpdatePasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: Colors.white,
       title: const Text("Update Password"),
       content: SingleChildScrollView(
         child: Column(
@@ -150,7 +151,7 @@ class _UpdatePasswordDialogState extends State<UpdatePasswordDialog> {
         ElevatedButton(
           style: ElevatedButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            backgroundColor: Colors.grey[400],
+            backgroundColor: Colors.grey[200],
           ),
           onPressed: () => Navigator.pop(context),
           child: const Text(

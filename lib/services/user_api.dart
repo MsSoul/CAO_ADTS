@@ -9,6 +9,50 @@ class UserApi {
   final String baseUrl = Config.baseUrl;
   final Logger logger = Logger();
 
+  // Add this function to your UserApi class
+Future<Map<String, dynamic>> requestOtpForUpdate(int empId, String email) async {
+  try {
+    // Sending OTP request to the server
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/users/otp-for-update'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "emp_id": empId,
+        "email": email,
+      }),
+    );
+
+    // Check the server's response
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      return {"error": "Server error: ${response.statusCode}"};
+    }
+  } catch (e) {
+    return {"error": "Failed to request OTP. Please try again."};
+  }
+}
+
+  Future<Map<String, dynamic>> verifyOtp(int empId, String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/verify-otp/verify-otp'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "emp_id": empId,
+          "otp": otp,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        return {"error": "Server error: ${response.statusCode}"};
+      }
+    } catch (e) {
+      return {"error": "Failed to verify OTP. Please try again."};
+    }
+  }
+
   // 🔹 Login Function (Fixed to store emp_id instead of id_number)
   Future<Map<String, dynamic>> login(String idNumber, String password) async {
     try {
@@ -91,25 +135,6 @@ class UserApi {
     }
   }
   
-  Future<Map<String, dynamic>> verifyOtp(int empId, String otp) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/verify-otp/verify-otp'),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "emp_id": empId,
-          "otp": otp,
-        }),
-      );
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        return {"error": "Server error: ${response.statusCode}"};
-      }
-    } catch (e) {
-      return {"error": "Failed to verify OTP. Please try again."};
-    }
-  }
 
   Future<Map<String, dynamic>> resendOtp(int empId) async {
     try {
