@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import '../services/items_api.dart';
 import '../design/colors.dart';
-import 'items_transaction_table.dart'; // Import the new table
+import 'items_transaction_table.dart';
 import 'lend_transaction.dart';
 
 class LendingItemsScreen extends StatefulWidget {
   final int currentDptId;
   final int empId;
-  
+
   const LendingItemsScreen({super.key, required this.currentDptId, required this.empId});
 
   @override
@@ -69,7 +69,11 @@ class _LendingItemsScreenState extends State<LendingItemsScreen> {
   void _searchItems(String query) {
     setState(() {
       filteredItems = allItems
-          .where((item) => item['name'].toLowerCase().contains(query.toLowerCase()))
+          .where((item) =>
+              (item['ITEM_NAME']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false) ||
+              (item['DESCRIPTION']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false) ||
+               (item['PAR_NO']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false)
+          )
           .toList();
     });
   }
@@ -88,7 +92,7 @@ class _LendingItemsScreenState extends State<LendingItemsScreen> {
         itemName: item['ITEM_NAME'],
         description: item['DESCRIPTION'],
         currentDptId: widget.currentDptId,
-        initialTransactions: [], // Adjust if necessary
+        initialTransactions: [],
         availableQuantity: item['quantity'],
       ),
     );
@@ -125,7 +129,6 @@ class _LendingItemsScreenState extends State<LendingItemsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Search Bar
                       Padding(
                         padding: const EdgeInsets.only(bottom: 5),
                         child: SizedBox(
@@ -171,8 +174,6 @@ class _LendingItemsScreenState extends State<LendingItemsScreen> {
                         ),
                       ),
                       const SizedBox(height: 5),
-
-                      // Items Transaction Table
                       Expanded(
                         child: ItemsTransactionTable(
                           items: filteredItems,

@@ -186,6 +186,17 @@ _loadBorrowedItems(); // Refresh the screen
                               borderSide: const BorderSide(
                                   color: AppColors.primaryColor, width: 2),
                             ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, color: AppColors.primaryColor),
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchController.clear();
+                                          _searchItems('');
+                                        });
+                                      },
+                                    )
+                                  : null,
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide: const BorderSide(

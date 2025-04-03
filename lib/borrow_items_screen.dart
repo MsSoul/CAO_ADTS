@@ -81,14 +81,17 @@ class _BorrowItemsScreenState extends State<BorrowItemsScreen> {
     }
   }
 
-  void _searchItems(String query) {
-    setState(() {
-      filteredItems = allItems
-          .where((item) =>
-              item['name'].toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
+void _searchItems(String query) {
+  setState(() {
+    filteredItems = allItems
+        .where((item) =>
+            (item['ITEM_NAME']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false) ||
+            (item['description']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false) ||
+            (item['PAR_NO']?.toString().toLowerCase().contains(query.toLowerCase()) ?? false)
+        )
+        .toList();
+  });
+}
 
   void _onBorrowPressed(Map<String, dynamic> item) async {
     // Fetch the borrower name and ensure it's not null
@@ -182,6 +185,17 @@ class _BorrowItemsScreenState extends State<BorrowItemsScreen> {
                               borderSide: const BorderSide(
                                   color: AppColors.primaryColor, width: 2),
                             ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, color: AppColors.primaryColor),
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchController.clear();
+                                          _searchItems('');
+                                        });
+                                      },
+                                    )
+                                  : null,
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                               borderSide: const BorderSide(

@@ -81,7 +81,7 @@ class _TransferItemsScreenState extends State<TransferItemsScreen> {
     setState(() {
       filteredItems = allItems
           .where((item) =>
-              item['name'].toLowerCase().contains(query.toLowerCase()))
+              item['ITEM_NAME'].toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
