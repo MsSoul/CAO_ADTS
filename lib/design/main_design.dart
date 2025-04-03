@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'colors.dart';
+import '../otp_screen.dart';
 import '../services/user_api.dart';
 import '../update_password.dart';
 import '../main.dart';
 import '../update_email.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+//import '../services/user_api.dart';
 
 // Logo Widget
 Widget mainLogo(double size) {
@@ -115,6 +118,69 @@ class MainDesignState extends State<MainDesign> {
     }
   }
 
+ Future<void> _handleUpdate(BuildContext context, String updateType) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  int? empId = prefs.getInt("empId");
+
+  // Debugging: Print empId
+  debugPrint("empId: $empId");
+
+  if (empId == null) {
+    Fluttertoast.showToast(msg: "User information missing. Please log in again.");
+    return;
+  }
+
+  // Show loading dialog
+  showDialog(
+    context: context,
+    barrierDismissible: false, // Prevent closing the dialog by tapping outside
+    builder: (BuildContext context) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    },
+  );
+
+  try {
+    // Request OTP using only empId
+    Map<String, dynamic> otpResponse = await UserApi().requestOtpForUpdate(empId);
+
+    if (otpResponse.containsKey("error")) {
+      Fluttertoast.showToast(msg: otpResponse["error"]);
+      Navigator.pop(context); // Close the loading dialog
+      return;
+    }
+
+    Fluttertoast.showToast(msg: "OTP sent to your email.");
+
+    // Navigate to OTP screen
+    bool otpVerified = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtpScreen(empId: empId, currentDptId: 0),
+      ),
+    );
+
+    // Close the loading dialog
+    Navigator.pop(context);
+
+    if (otpVerified) {
+      // Open the respective update dialog
+      showDialog(
+        context: context,
+        builder: (context) => updateType == 'update_email'
+            ? const UpdateEmailDialog()
+            : const UpdatePasswordDialog(),
+      );
+    }
+  } catch (error) {
+    // Close the loading dialog in case of error
+    Navigator.pop(context);
+    Fluttertoast.showToast(msg: "Failed to request OTP: $error");
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     return PreferredSize(
@@ -181,17 +247,9 @@ class MainDesignState extends State<MainDesign> {
                       ),
                     ),
                   ],
-                  onSelected: (value) {
-                    if (value == 'update_password') {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const UpdatePasswordDialog(),
-                      );
-                    } else if (value == 'update_email') {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const UpdateEmailDialog(),
-                      );
+                   onSelected: (value) {
+                    if (value == 'update_password' || value == 'update_email') {
+                      _handleUpdate(context, value);
                     } else if (value == 'logout') {
                       _logout(context);
                     }
