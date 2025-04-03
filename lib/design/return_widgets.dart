@@ -105,6 +105,8 @@ String _capitalizeWords(String text) {
 }
 
 Future<void> showSuccessDialog({required BuildContext context}) async {
+  if (!context.mounted) return;
+
   return showDialog(
     context: context,
     barrierDismissible: false,
@@ -131,16 +133,16 @@ Future<void> showSuccessDialog({required BuildContext context}) async {
           Center(
             child: ElevatedButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Close success dialog
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop(); // Close success dialog
+                }
 
                 Future.delayed(const Duration(milliseconds: 100), () {
                   if (context.mounted) {
-                    Navigator.of(context)
-                        .pop(); // Close return transaction dialog
+                    Navigator.maybePop(context); // Safe pop to avoid errors
                   }
                   // 🔄 Reload inbox notifications
-                  unreadNotifCount
-                      .value++; // Triggers ValueNotifier to refresh UI
+                  unreadNotifCount.value++; // Triggers ValueNotifier to refresh UI
                 });
               },
               style: ElevatedButton.styleFrom(
@@ -158,6 +160,7 @@ Future<void> showSuccessDialog({required BuildContext context}) async {
     },
   );
 }
+
 
 Widget buildTextField(
   String label,
