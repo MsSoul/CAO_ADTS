@@ -142,16 +142,19 @@ class MainDesignState extends State<MainDesign> {
   );
 
   try {
-    // Request OTP using only empId
-    Map<String, dynamic> otpResponse = await UserApi().requestOtpForUpdate(empId);
+  // Request OTP using only empId
+  Map<String, dynamic> otpResponse = await UserApi().requestOtpForUpdate(empId);
 
-    if (otpResponse.containsKey("error")) {
-      Fluttertoast.showToast(msg: otpResponse["error"]);
-      Navigator.pop(context); // Close the loading dialog
-      return;
-    }
+  // Debugging: Print the full response
+  debugPrint("OTP Response: $otpResponse");
 
-    Fluttertoast.showToast(msg: "OTP sent to your email.");
+  if (otpResponse.containsKey("error")) {
+    Fluttertoast.showToast(msg: otpResponse["error"]);
+    Navigator.pop(context);
+    return;
+  }
+
+  Fluttertoast.showToast(msg: "OTP sent to your email.");
 
     // Navigate to OTP screen
     bool otpVerified = await Navigator.push(

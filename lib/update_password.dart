@@ -69,28 +69,44 @@ class _UpdatePasswordDialogState extends State<UpdatePasswordDialog> {
 }
 
 
-  InputDecoration customInputDecoration(String label, bool obscure, VoidCallback toggle, {String? errorText}) {
-    return InputDecoration(
-      labelText: label,
-      errorText: errorText,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.primaryColor),
+InputDecoration customInputDecoration(
+  String labelText,
+  bool obscureText,
+  VoidCallback toggleVisibility, {
+  String? errorText,
+}) {
+  return InputDecoration(
+    labelText: labelText,
+    labelStyle: const TextStyle(color: Colors.grey), 
+    floatingLabelStyle: TextStyle(color: AppColors.primaryColor), 
+    floatingLabelBehavior: FloatingLabelBehavior.auto, 
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: AppColors.primaryColor, width: 2.0),
+      borderRadius: BorderRadius.circular(8.0),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.grey, width: 1.0),
+      borderRadius: BorderRadius.circular(8.0),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+      borderRadius: BorderRadius.circular(8.0),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderSide: const BorderSide(color: Colors.red, width: 2.0),
+      borderRadius: BorderRadius.circular(8.0),
+    ),
+    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+    suffixIcon: IconButton(
+      icon: Icon(
+        obscureText ? Icons.visibility_off : Icons.visibility,
+        color: Colors.grey,
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.primaryColor, width: 2),
-      ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      suffixIcon: IconButton(
-        icon: Icon(
-          obscure ? Icons.visibility_off : Icons.visibility,
-          color: Colors.grey,
-        ),
-        onPressed: toggle,
-      ),
-    );
-  }
+      onPressed: toggleVisibility,
+    ),
+    errorText: errorText,
+  );
+}
 
   @override
   Widget build(BuildContext context) {

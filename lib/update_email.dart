@@ -72,6 +72,8 @@ class _UpdateEmailDialogState extends State<UpdateEmailDialog> {
         keyboardType: TextInputType.emailAddress,
         decoration: InputDecoration(
           labelText: "New Email Address",
+          labelStyle: const TextStyle(color: AppColors.primaryColor),
+          floatingLabelStyle: const TextStyle(color: AppColors.primaryColor),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppColors.primaryColor),
