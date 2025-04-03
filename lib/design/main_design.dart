@@ -133,7 +133,7 @@ class MainDesignState extends State<MainDesign> {
   // Show loading dialog
   showDialog(
     context: context,
-    barrierDismissible: false, // Prevent closing the dialog by tapping outside
+    barrierDismissible: false, 
     builder: (BuildContext context) {
       return const Center(
         child: CircularProgressIndicator(),
