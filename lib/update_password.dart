@@ -85,7 +85,7 @@ InputDecoration customInputDecoration(
       borderRadius: BorderRadius.circular(8.0),
     ),
     enabledBorder: OutlineInputBorder(
-      borderSide: const BorderSide(color: Colors.grey, width: 1.0),
+      borderSide: const BorderSide(color: AppColors.primaryColor, width: 1.0),
       borderRadius: BorderRadius.circular(8.0),
     ),
     errorBorder: OutlineInputBorder(
@@ -100,7 +100,7 @@ InputDecoration customInputDecoration(
     suffixIcon: IconButton(
       icon: Icon(
         obscureText ? Icons.visibility_off : Icons.visibility,
-        color: Colors.grey,
+        color: AppColors.primaryColor,
       ),
       onPressed: toggleVisibility,
     ),

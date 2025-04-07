@@ -8,8 +8,32 @@ import 'config.dart';
 class UserApi {
   final String baseUrl = Config.baseUrl;
   final Logger logger = Logger();
+//update email only
+Future<Map<String, dynamic>> requestOtpForNewEmail(int empId, String newEmail) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/users/request-otp-new-email'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "emp_id": empId,
+        "new_email": newEmail,
+      }),
+    );
 
-  // Add this function to your UserApi class
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      logger.e("Server error: ${response.statusCode}");
+      return {"error": "Server error: ${response.statusCode}"};
+    }
+  } catch (e) {
+    logger.e("Request OTP for new email failed: $e");
+    return {"error": "Failed to request OTP for new email. Please try again."};
+  }
+}
+
+
+ //update password only
 Future<Map<String, dynamic>> requestOtpForUpdate(int empId) async {
   try {
     // Sending OTP request to the server with only empId
